@@ -128,7 +128,7 @@ The following table describes all field properties available in TagTags, if they
 
 ## Expressions
 
-TagTags 2 supports relatively complex expressions, at a level comparable to those in Excel and other spreadsheet applications. Expressions are used in three contexts within the app:
+TagTags 2 supports relatively complex expressions that are used in three contexts within the app:
 
 1. Construction of unique identifiers within each sheet.
 2. Calculating/transforming values within the calculated data type.
