@@ -1,0 +1,7 @@
+				<h2>'{{.Project}}'</h2>
+				<ul>{{if .CanModify}}
+					<li><a href="/projects/{{.Project}}/sheets">Sheets</a></li>
+					<li><a href="/projects/{{.Project}}/groups">Groups</a></li>{{end}}
+					<li><a href="/projects/{{.Project}}/data">Data</a></li>
+				</ul>
+				

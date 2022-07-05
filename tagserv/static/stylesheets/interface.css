@@ -1,0 +1,490 @@
+input,
+select,
+textarea,
+abutton,
+.abutton,
+.asubmit,
+button,
+tabs,
+label.filelbl {
+	font-family: 'Fira Sans', sans-serif;
+	border-style: solid;
+	border-color: var(--bg-alt3);
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	-o-appearance: none;
+	outline: none;
+	-webkit-transition: 0.2s;
+	transition: 0.2s;
+	background-color: var(--bg3);
+	color: var(--fg);
+	font-size: 10pt;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled,
+abutton:disabled,
+.abutton:disabled,
+.asubmit:disabled {
+	opacity: 0.6;
+	box-shadow: none !important;
+}
+
+a.abutton {
+	text-decoration: none;
+}
+
+input[type=checkbox],
+input[type=radio],
+select[multiple],
+textarea,
+tabs {
+	border-width: 1px 1px 1px 1px;
+}
+
+input[type=button],
+input[type=submit],
+button,
+abutton,
+.abutton,
+.asubmit,
+label.filelbl,
+select:not([multiple]) {
+	border-width: 1px 1px 3px 1px;
+}
+
+abutton.search {
+    padding-left: 32px;
+    background-image: url('../images/search.svg');
+    background-repeat: no-repeat;
+    background-position: center left;
+    background-size: 32px 32px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+input[type=file] {
+	border-width: 0px;
+}
+
+select[multiple], textarea {
+	background-color: var(--bg3);
+}
+
+select,
+textarea,
+input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]) {
+	border-radius: 0px;
+}
+
+input[type=text].search {
+	padding-left: 32px !important;
+	background-image: url('../images/search.svg');
+	background-position: center left;
+	background-repeat: no-repeat;
+}
+
+select:-ms-expand {
+	display: none;
+}
+
+input:not([type=checkbox]):not([type=radio]),
+select:not([multiple]),
+button,
+abutton,
+.abutton,
+.asubmit,
+tabs {
+	height: 32px;
+}
+
+input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=file]) {
+	padding: 0px 6px 0px 6px;
+}
+
+input[type=text],
+input[type=email],
+input[type=number],
+input[type=date],
+input[type=time],
+input[type=password] {
+	border-width: 0px 0px 2px 0px;
+}
+
+input[type=text]:not(:disabled):hover,
+input[type=email]:not(:disabled):hover,
+input[type=number]:not(:disabled):hover,
+input[type=date]:not(:disabled):hover,
+input[type=time]:not(:disabled):hover,
+input[type=password]:not(:disabled):hover,
+input[type=checkbox]:not(:disabled):hover,
+input[type=radio]:not(:disabled):hover,
+select[multiple]:not(:disabled):hover,
+textarea:not(:disabled):hover {
+	border-color: var(--bg-alt5);
+}
+
+input[type=text]:not(:disabled):focus,
+input[type=text]:not(:disabled):active,
+input[type=email]:not(:disabled):focus,
+input[type=email]:not(:disabled):active,
+input[type=number]:not(:disabled):focus,
+input[type=number]:not(:disabled):active,
+input[type=date]:not(:disabled):focus,
+input[type=date]:not(:disabled):active,
+input[type=time]:not(:disabled):focus,
+input[type=time]:not(:disabled):active,
+input[type=password]:not(:disabled):focus,
+input[type=password]:not(:disabled):active,
+input[type=checkbox]:not(:disabled):focus,
+input[type=checkbox]:not(:disabled):active,
+input[type=radio]:not(:disabled):focus,
+input[type=radio]:not(:disabled):active,
+textarea:not(:disabled):focus,
+textarea:not(:disabled):active {
+	border-color: var(--bg-alt4);
+}
+
+input[type=checkbox],
+input[type=radio] {
+	position: relative;
+	height: 24px;
+	width: 24px;
+}
+
+input[type=checkbox]::before, input[type=checkbox]::after {
+	position: absolute;
+	content: '';
+	height:4px;
+	width: 20px;
+	top: 9px;
+	left: 1px;
+	background-color: var(--bg-alt3);
+	-webkit-transition: 0.2s;
+	transition: 0.2s;
+}
+
+input[type=checkbox]:hover::before, input[type=checkbox]:hover::after,
+input[type=checkbox]:focus::before, input[type=checkbox]:focus::after {
+	background-color: var(--bg-alt6);
+}
+
+input[type=checkbox]::before {
+	-webkit-transform: rotate(45deg);
+	transform: rotate(45deg);
+}
+
+input[type=checkbox]::after {
+	-webkit-transform: rotate(-45deg);
+	transform: rotate(-45deg);
+}
+
+input[type=checkbox]:checked::before, input[type=checkbox]:checked::after {
+	opacity: 1;
+}
+
+input[type=checkbox]:not(:checked)::before, input[type=checkbox]:not(:checked)::after {
+	opacity: 0;
+}
+
+input[type=radio] {
+	border-radius: 50%;
+}
+
+input[type=radio]::before {
+	position: absolute;
+	content: '';
+	height: 16px;
+	width: 16px;
+	border-radius: 50%;
+	top: 3px;
+	left: 3px;
+	background-color: var(--bg-alt3);
+	-webkit-transition: 0.2s;
+	transition: 0.2s;
+}
+
+input[type=radio]:hover::before,
+input[type=radio]:focus::before {
+	background-color: var(--bg-alt6);
+}
+
+input[type=radio]:checked::before {
+	opacity: 1;
+}
+
+input[type=radio]:not(:checked)::before {
+	opacity: 0;
+}
+
+input[type=button],
+select:not([multiple]),
+abutton
+.abutton,
+button,
+tabs,
+label.filelbl {
+	border-color: var(--bg-alt3);
+	display: inline-block;
+	color: var(--fg);
+	text-decoration: none;
+}
+
+input[type=button],
+input[type=submit],
+abutton,
+.abutton,
+.asubmit,
+button {
+	padding: 0px 8px 0px 8px;
+}
+
+input[type=button]:not(:disabled),
+input[type=submit]:not(:disabled),
+abutton:not(:disabled),
+.abutton:not(:disabled),
+.asubmit:not(:disabled),
+button:not(:disabled) {
+	cursor: pointer;
+}
+
+input[type=button],
+input[type=submit],
+abutton,
+.abutton,
+.asubmit,
+button,
+label.filelbl {
+	display: inline-block;
+	line-height: 28px;
+	border-radius: 4px;
+}
+
+label.filelbl {
+	padding: 0px 8px 0px 32px;
+}
+
+select:not([multiple]) {
+	padding: 0px 32px 0px 8px;
+	background-image: url('../images/arrowdown.svg?');
+	line-height: 30px;
+	border-radius: 4px;
+	background-size: 32px 32px;
+	background-position: center right;
+	background-repeat: no-repeat;
+}
+
+input[type=button]:not(:disabled):hover,
+input[type=button]:not(:disabled):focus,
+button:not(:disabled):hover,
+button:not(:disabled):focus,
+abutton:not(:disabled):hover,
+abutton:not(:disabled):focus,
+.abutton:not(:disabled):hover,
+.abutton:not(:disabled):focus,
+label.filelbl:not(:disabled):hover,
+label.filelbl:not(:disabled):focus {
+	border-color: var(--bg-alt1);
+}
+
+input[type=button]:not(:disabled):active,
+button:not(:disabled):active,
+abutton:not(:disabled):active,
+.abutton:not(:disabled):active,
+label.filelbl:not(:disabled):active,
+select:not([multiple]):not(:disabled):active {
+	background-color: var(--bg-alt3);
+}
+
+select:not([multiple]):not(:disabled):hover,
+select:not([multiple]):not(:disabled):focus,
+tabs:hover,
+tabs:focus {
+	border-color: var(--bg-alt1);
+}
+
+input[type=button],
+input[type=submit],
+button,
+abutton,
+.abutton,
+.asubmit,
+label.filelbl {
+	font-weight: bold;
+}
+
+input[type=submit], .asubmit {
+	border-color: var(--bg-alt6);
+	display: inline-block;
+	color: var(--fg);
+	font-weight: bold;
+	text-decoration: none;
+}
+
+input[type=submit]:not(:disabled):focus,
+input[type=submit]:not(:disabled):hover,
+.asubmit:not(:disabled):focus,
+.asubmit:not(:disabled):hover {
+	border-color: var(--bg-alt4);
+}
+
+input[type=submit]:not(:disabled):active,
+.asubmit:not(:disabled):active {
+	background-color: var(--bg-alt6);
+}
+
+abutton {
+	display: inline-block;
+}
+
+abutton, tabs {
+	color: var(--fg);
+	text-decoration: none;
+}
+
+label.chkwlbl {
+	display: flex;
+	flex-direction: row;
+	vertical-align: middle;
+	width: 100%;
+	position: relative;
+	margin: 0px 0px 10px 0px;
+}
+
+label.chkwlbl input[type=checkbox], label.chkwlbl input[type=radio] {
+	flex: none;
+	display: inline-block;
+	margin: 0px 10px 0px 0px;
+}
+
+label.chkwlbl span {
+	flex: 1;
+}
+
+label.filelbl {
+	display: block;
+	height: 32px;
+	line-height: 30px;
+	padding: 0px 8px 0px 28px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	background-image: url('../images/file.svg');
+	background-size: 28px 28px;
+	background-repeat: no-repeat;
+	background-position: center left;
+}
+
+label.filelbl input[type=file] {
+	opacity: 0;
+	width: 0.1px;
+	height: 0.1px;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}
+
+tabs {
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	border-radius: 4px;
+}
+
+tabs input[type=radio] {
+	height: 0px;
+	width: 0px;
+	top: -100px;
+	left: -100px;
+	display: none;
+}
+
+tabs label.tab {
+	display: block;
+	flex: auto;
+	height: 30px;
+	font-weight: bold;
+	line-height: 29px;
+	text-align: center;
+	border-style: solid;
+	border-width: 0px 0px 3px 0px;
+	border-color: var(--bg-alt3);
+}
+
+tabs label.tab:hover,
+tabs label.tab:focus {
+	border-color: var(--bg-alt1);
+}
+
+tabs input[type=radio]:checked+label.tab, label.tab:active {
+	border-color: var(--fg-alt3);
+}
+
+div.selectable {
+	position: relative;
+	float: left;
+	height: 28px;
+	padding: 0px;
+	line-height: 24px;
+	margin: 0px 4px 4px 0px;
+}
+
+div.selectable label {
+	display: inline-block;
+	width: 100%;
+	height: 100%;
+	padding: 0px 5px 0px 16px;
+	border: 1px solid var(--bg1);
+	background-color: var(--bg3);
+	cursor: pointer;
+	font-size: 10pt;
+	line-height: 28px;
+	transition: background-color 0.2s, color 0.2s;
+	-webkit-transition: background-color 0.2s, color 0.2s;
+	-moz-transition: background-color 0.2s, color 0.2s;
+	-ms-transition: background-color 0.2s, color 0.2s;
+	-o-transition: background-color 0.2s, color 0.2s;
+	border-radius: 4px;
+}
+
+div.selectable label::before {
+	content: '';
+	display: block;
+	height: 6px;
+	width: 6px;
+	background-color: var(--bg1);
+	border-radius: 50%;
+	position: absolute;
+	left: 5px;
+	top: 11px;
+	transition: background-color 0.2s, color 0.2s;
+}
+
+div.selectable label:hover {
+	background-color: var(--bg-alt2);
+}
+
+div.selectable input[type=checkbox] {
+	display: none;
+	visibility: hidden;
+}
+
+div.selectable input[type=checkbox]:checked ~ label {
+	border-color: var(--bg-alt2);
+	background-color: var(--bg-alt1);
+}
+
+div.selectable input[type=checkbox]:checked ~ label::before {
+	background-color: var(--fg);
+}
+
+.sr-only {
+	position: fixed;
+	top: -10000px;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}

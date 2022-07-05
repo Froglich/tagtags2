@@ -1,0 +1,691 @@
+				<main>
+					<h2>{{if .SheetData}}Edit sheet{{else}}Create a sheet{{end}}</h2>
+					<div style="display: flex; gap: 0px 5px; margin-bottom: 5px; justify-content: end;">
+						<input type="text" id="inputFormName" placeholder="Name the sheet" style="flex: 1;">
+						<input type="submit" id="saveSheet" value="Save sheet">
+					</div>
+					<div style="display: flex; gap: 0px 5px; margin-bottom: 5px; justify-content: start;">
+						<input type="button" id="addGroup" value="Add group">
+						<input type="button" id="addField" value="Add field">
+					</div>
+					<div id="editor" class="tt-editor">
+						<div class="tt-fields" id="fields"></div>
+						<div class="tt-properties" id="properties"></div>
+					</div>
+				</main>
+				<script src="/static/scripts/glob.js"></script>
+				<script>
+					let sheetData = {{if .SheetData}}{{.SheetData}}{{else}}null{{end}};
+					let sheetName = {{if .SheetName}}{{.SheetName}}{{else}}null{{end}};
+					let project = {{.Project}};
+					//let sheetName = 'Krycklan regular streams';
+					//let sheetData = {"columns":2,"identifier":{"title":"Sampling ID","fields":[{"id":"year","title":"Year","type":3,"alternatives":["2022"]},{"id":"sampling","title":"Sampling","type":3,"alternatives":["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30"]},{"id":"site","title":"Site","type":3,"alternatives":["1","2","4","5","6","7","9","10","12","13","14","15","16","18","20","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74"]}],"constructor":"concat(`1-101`,right($year,2),right(concat(0,$sampling),2),right(concat(0,$site),2))"},"groups":[{"title":"Sampling details","fields":[{"title":"Date","id":"date","mandatory":true,"type":4,"remember_values":true},{"title":"Time","id":"time","mandatory":true,"type":5},{"title":"Sampler","id":"sampler","mandatory":true,"type":3,"alternatives":["Johannes Tiwari","Mikael Holmlund","Johannes Larsson","Rowan Dignam","Viktor Boström","Katarina Hedman","Dorothea Zannantonio","Joel Norén"],"allow_other":true,"remember_values":true}]},{"title":"Samples","fields":[{"title":"Sampling method","id":"samplingmethod","mandatory":true,"type":3,"alternatives":["Normal (under water)","Weir (overfall)","Pump","Syringe"]},{"title":"Regular sample","id":"regularsample","type":6,"mandatory":true},{"title":"DNA A","id":"dna_a","type":6,"mandatory":true,"visible_if":"$site=7"},{"title":"DNA B","id":"dna_b","type":6,"mandatory":true,"visible_if":"$site=7"},{"title":"Archive A","description":"125ml","id":"archive_a","type":6,"mandatory":true},{"title":"Archive B","description":"125ml","id":"archive_b","type":6,"mandatory":true,"visible_if":"or($site=2,$site=4,$site=5,$site=6,$site=7,$site=9,$site=13,$site=16)"},{"title":"pH","id":"ph","type":6,"mandatory":true},{"title":"CO2 Vial","description":"5ml in 22ml vial","id":"co2vial","type":6,"mandatory":true},{"title":"18O","id":"18o","type":6,"mandatory":true},{"title":"Hg-tot","id":"hg_tot","description":"125ml","type":6,"mandatory":true,"visible_if":"and(or($site=2,$site=4,$site=5,$site=7,$site=18,$site=53,$site=54,$site=55,$site=56,$site=57,$site=58,$site=59,$site=60), $sampling%2=1)"},{"title":"Hg-tot (glas)","id":"hg_tot_glas","description":"125ml glas","type":6,"mandatory":true,"visible_if":"$site=2"},{"title":"MeHg","id":"mehg","description":"250ml","type":6,"mandatory":true,"visible_if":"and(or($site=2,$site=4,$site=5,$site=7,$site=18,$site=53,$site=54,$site=55,$site=56,$site=57,$site=58,$site=59,$site=60), $sampling%2=1)"},{"title":"Susp. material A","description":"250ml","id":"suspendedmaterial_a","type":6,"mandatory":true,"visible_if":"or($site=1,$site=2,$site=4,$site=18,$site=53,$site=54,$site=55,$site=56,$site=57,$site=58,$site=59,$site=60,$site=66)"},{"title":"Susp. material B","description":"250ml","id":"suspendedmaterial_b","type":6,"mandatory":true,"visible_if":"or($site=1,$site=2,$site=4,$site=18,$site=53,$site=54,$site=55,$site=56,$site=57,$site=58,$site=59,$site=60,$site=66)"},{"title":"Blank","id":"blank","description":"250ml","type":6,"mandatory":true,"visible_if":"$site=7"},{"title":"Blank (Hg-tot)","id":"hg_tot_blank","description":"125ml glas","type":6,"mandatory":true,"visible_if":"and(or($site=2,$site=7), $sampling%2=1)"},{"title":"Extra samples","id":"extra_samples","type":6,"mandatory":false},{"title":"Extra sample 1","id":"extra_sample_1","type":1,"visible_if":"$extra_samples=TRUE","mandatory":false},{"title":"Extra sample 2","id":"extra_sample_2","type":1,"visible_if":"$extra_samples=TRUE","mandatory":false},{"title":"Extra sample 3","id":"extra_sample_3","type":1,"visible_if":"$extra_samples=TRUE","mandatory":false},{"title":"Extra sample 4","id":"extra_sample_4","type":1,"visible_if":"$extra_samples=TRUE","mandatory":false},{"title":"Extra sample 5","id":"extra_sample_5","type":1,"visible_if":"$extra_samples=TRUE","mandatory":false}]},{"title":"Measurements","fields":[{"title":"Influence on water level","id":"wlvlinfluence","mandatory":true,"type":3,"alternatives":["No influence","Little ice","Ice","Blockage","Dry","Leaking weir"]},{"title":"Distance from site sign","description":"+/- meters upstream","mandatory":true,"id":"distancefromsite","type":2},{"title":"Water temperature","description":"kOhm","mandatory":true,"id":"watertemperature","type":2},{"title":"Water temperature (fallback)","description":"°C","mandatory":true,"id":"watertemperature_fallback","visible_if":"$watertemperature=NULL","type":2},{"title":"Calculated temp","description":"°C","id":"watertemperaturecalc","visible_if":"$watertemperature!=NULL","function":"round(((560.16*pow($watertemperature*1000,-0.072))-273.15)-1.425, 2)","type":10},{"title":"Weir left","description":"cm","mandatory":true,"id":"weir_left","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=1,$site=3))"},{"title":"Weir V","description":"cm","mandatory":true,"id":"weir_v","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=1,$site=2,$site=3,$site=4,$site=7,$site=53,$site=54,$site=55,$site=56,$site=57,$site=58,$site=59,$site=60,$site=61,$site=62,$site=63,$site=64,$site=65))"},{"title":"Weir right","description":"cm","mandatory":true,"id":"weir_right","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=1,$site=3))"},{"title":"Angle left","description":"cm","mandatory":true,"id":"angle_left","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=1,$site=2,$site=4,$site=7,$site=53,$site=54,$site=55,$site=56,$site=57,$site=58,$site=59,$site=60,$site=60,$site=61,$site=62,$site=63,$site=64,$site=65))"},{"title":"Angle right","description":"cm","mandatory":true,"id":"angle_right","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=1,$site=2,$site=4,$site=7,$site=53,$site=54,$site=55,$site=56,$site=57,$site=58,$site=59,$site=60,$site=60,$site=61,$site=62,$site=63,$site=64,$site=65))"},{"title":"Culvert","description":"cm","mandatory":true,"id":"culvert","type":2,"visible_if":"and($wlvlinfluence!=`Ice,$wlvlinfluence!=`Leaking weir`,or($site=9,$site=14,$site=20,$site=66))"},{"title":"Upper angle","description":"On steel rold - cm","mandatory":true,"id":"angle_upper","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=16,$site=9))"},{"title":"Lower angle","description":"On steel rold - cm","mandatory":true,"id":"angle_lower","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=16,$site=9))"},{"title":"Stilling well","description":"cm","mandatory":true,"id":"stilling_well","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=13,$site=18))"},{"title":"Flume left","description":"cm","mandatory":true,"id":"flume_left","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=5,$site=6))"},{"title":"Flume center","description":"cm","mandatory":true,"id":"flume_center","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=6,$site=13,$site=18))"},{"title":"Flume right","description":"cm","mandatory":true,"id":"flume_right","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=5,$site=6))"},{"title":"Flume to bottom","description":"cm","mandatory":true,"id":"flume_to_bottom","type":2,"visible_if":"or($site=18,$site=13)"},{"title":"Staff gauge","description":"cm","mandatory":true,"id":"staff_gauge","type":2,"visible_if":"and($wlvlinfluence!=Ice,$wlvlinfluence!=`Leaking weir`,or($site=3,$site=7,$site=9,$site=10,$site=14,$site=15,$site=20,$site=53,$site=54,$site=55,$site=56,$site=57,$site=58,$site=59,$site=60,$site=60,$site=61,$site=62,$site=63,$site=64,$site=65))"},{"title":"Bridge railing","description":"cm","mandatory":true,"id":"bridge_railing","type":2,"visible_if":"and($wlvlinfluence!=Ice,$site=16)"}]},{"title":"Miscellaneous","fields":[{"title":"Sampling quality","id":"quality","mandatory":true,"type":3,"alternatives":["Good","Doubtful","Bad","Not possible"]},{"title":"Battery voltage","description":"V","mandatory":true,"id":"battery_voltage","type":2,"visible_if":"or($site=1,$site=3,$site=9,$site=10,$site=16)"},{"title":"Charging battery voltage","description":"V - Before potential change","mandatory":true,"id":"charging_voltage","type":2,"visible_if":"$site=16"},{"title":"Changed battery connectors","id":"changed_battery_connectors","type":6,"mandatory":true,"visible_if":"$site=16"},{"title":"CO2-probe rinsed","id":"rinsedco2probe","type":6,"mandatory":true,"visible_if":"or($site=2,$site=4,$site=5,$site=7,$site=18)"},{"title":"S::CAN filter rinsed","id":"rinsedscanfilter","type":6,"visible_if":"or($site=2,$site=4,$site=5)"},{"title":"S::CAN viper checked","id":"scanvipercheck","type":6,"visible_if":"$site=6"},{"title":"Cleaned flume","id":"cleaned_flume","type":6,"visible_if":"or($site=5,$site=6,$site=13,$site=18,$site=2)"},{"title":"Cleaned weir","id":"cleaned_flume","type":6,"visible_if":"or($site=1,$site=2,$site=3,$site=4,$site=7)"},{"title":"Libell check","id":"libellstatus","mandatory":true,"type":3,"alternatives":["Good","Touching line","Out of level","Damaged"]},{"title":"Flow measurement","id":"flow_measured","type":6},{"title":"Type of flow measurement","id":"flowmeasurementtype","mandatory":true,"type":3,"alternatives":["Bucket","Salt","Flugel","Orange"],"visible_if":"$flow_measured=TRUE"},{"title":"Bucket type","id":"flowbuckettype","description":"Clearly specify volume","mandatory":true,"type":3,"alternatives":["Blue bucket (13 liter)","Blue bin (40 liter)","White square (11.6 liter)","White square salt bucket (11.6 liter)","Round 2 liter bottle (2.215 liter)","Round 1 liter bottle (1.075 liter)","250ml square bottle (280ml)"],"allow_other":true,"visible_if":"and($flow_measured=TRUE,$flowmeasurementtype=Bucket)"},{"title":"Bucket fill time 1","description":"Seconds","mandatory":true,"id":"bucket_fill_time_1","type":2,"visible_if":"and($flow_measured=TRUE,$flowmeasurementtype=Bucket)"},{"title":"Bucket fill time 2","description":"Seconds","mandatory":true,"id":"bucket_fill_time_2","type":2,"visible_if":"and($flow_measured=TRUE,$flowmeasurementtype=Bucket)"},{"title":"Bucket fill time 3","description":"Seconds","mandatory":true,"id":"bucket_fill_time_3","type":2,"visible_if":"and($flow_measured=TRUE,$flowmeasurementtype=Bucket)"},{"title":"Bucket fill time 4","description":"Seconds","mandatory":true,"id":"bucket_fill_time_4","type":2,"visible_if":"and($flow_measured=TRUE,$flowmeasurementtype=Bucket)"},{"title":"Bucket fill time 5","description":"Seconds","mandatory":true,"id":"bucket_fill_time_5","type":2,"visible_if":"and($flow_measured=TRUE,$flowmeasurementtype=Bucket)"},{"title":"Time of flow measurement","id":"time_of_flow","mandatory":true,"type":5,"visible_if":"$flow_measured=TRUE"},{"title":"Measured flow","description":"L/s","mandatory":true,"id":"measured_flow","type":2,"visible_if":"$flow_measured=TRUE"},{"title":"Field photo","id":"fieldphoto","type":8},{"title":"Field notes","id":"notes","type":1}]}]};
+					let sheetTrials = [];
+
+					let fields = document.querySelector('#fields');
+					let properties = document.querySelector('#properties');
+					let inputFormName = document.querySelector('#inputFormName');
+					let addGroup = document.querySelector('#addGroup');
+					let addField = document.querySelector('#addField');
+					let saveSheet = document.querySelector('#saveSheet');
+
+					function getEmptyTagTagsFieldObject() {
+						return {
+							id: '',
+							title: '',
+							type: 1,
+							description: '',
+							mandatory: false,
+							remember_values: false,
+							visible_if: '',
+							alternatives: [],
+							allow_other: false,
+							default_checked: false,
+							barcode: false,
+							function: '',
+							followup_values: []
+						};
+					}
+
+					function createTypeSelect() {
+						return buildElement({tag: 'select', children: [
+							{tag: 'option', value: '1', innerHTML: 'Text'},
+							{tag: 'option', value: '2', innerHTML: 'Number'},
+							{tag: 'option', value: '3', innerHTML: 'Select'},
+							{tag: 'option', value: '4', innerHTML: 'Date'},
+							{tag: 'option', value: '5', innerHTML: 'Time'},
+							{tag: 'option', value: '6', innerHTML: 'Boolean'},
+							{tag: 'option', value: '7', innerHTML: 'Coordinates'},
+							{tag: 'option', value: '8', innerHTML: 'Camera'},
+							{tag: 'option', value: '10', innerHTML: 'Function'}
+						]});
+					}
+
+					let workingGroupInc = 0;
+					function createGroupElement(name, desc, identifierGroup, constructor) {
+						workingGroupInc++; //Keep this at the top!
+						let group = buildElement({tag: 'div', class: (identifierGroup ? 'tt-group tt-identifier-group' : 'tt-group'), 'tt-editor-group-id': `GROUP${workingGroupInc}`, 'tt-group-name': name, 'tt-group-description': desc});
+						let groupTitleB = buildElement({tag: 'b', innerHTML: (identifierGroup ? `${name} (identifier)` : name)});
+						let groupDescEM = buildElement({tag: 'em', innerHTML: desc || ''});
+						let radio = buildElement({
+							tag: 'input',
+							type: 'radio',
+							class: 'tt-list-item-radio',
+							id: `GROUP${workingGroupInc}`, 
+							name: 'tt-radio', 
+							'tt-field': `GROUP${workingGroupInc}` });
+
+						let title = buildElement({
+							tag: 'label',
+							class: 'tt-group-title',
+							for: `GROUP${workingGroupInc}`,
+							children: [
+								groupTitleB,
+								document.createElement('br'),
+								groupDescEM
+							]});
+
+						if(identifierGroup) group.setAttribute('id', 'tt-identifier-group');
+
+						group.appendChild(radio);
+						group.appendChild(title);
+						fields.appendChild(group);
+
+						let fieldProperties = buildElement({tag: 'div', class: 'tt-field-properties', 'tt-field': `GROUP${workingGroupInc}`});
+						
+						if(!identifierGroup) {
+							let fieldAdjustment = buildElement({tag: 'div', class: 'tt-field-adjustment'})
+
+							let btnMoveUp = buildElement({tag: 'div', class: 'abutton tt-move-up', title: 'Move up', role: 'button', 'aria-label': 'Move the group up one step'});
+							let btnMoveDown = buildElement({tag: 'div', class: 'abutton tt-move-down', title: 'Move down', role: 'button', 'aria-label': 'Move the group down one step'});
+							let btnRemove = buildElement({tag: 'div', class: 'abutton tt-delete', title: 'Remove', role: 'button', 'aria-label': 'Remove the group'});
+
+							fieldAdjustment.appendChild(btnMoveUp);
+							fieldAdjustment.appendChild(btnMoveDown);
+							fieldAdjustment.appendChild(btnRemove);
+
+							btnMoveUp.addEventListener('click', () => {
+								if(group.previousSibling && group.previousSibling.getAttribute('class') == 'tt-group')
+									group.parentElement.insertBefore(group, group.previousSibling);
+							});
+
+							btnMoveDown.addEventListener('click', () => {
+								if(group.nextSibling && group.nextSibling.nextSibling) {
+									group.parentElement.insertBefore(group, group.nextSibling.nextSibling);
+								} else {
+									group.parentElement.appendChild(group);
+								}
+							});
+
+							btnRemove.addEventListener('click', () => {
+								fancyConfirm('Are you sure?', `Are you sure you want to remove the group including all fields? The operation can not be undone.`, () => {
+									group.parentElement.removeChild(group);
+									fieldProperties.parentElement.removeChild(fieldProperties);
+
+									if(document.querySelectorAll('.tt-group').length == 0) {
+										addField.setAttribute('disabled', 'disabled');
+									}
+								});
+							})
+
+							fieldProperties.appendChild(fieldAdjustment);
+						}
+
+						let inTitle = buildElement({tag: 'input', type: 'text', value: name});
+						let inDesc = buildElement({tag: 'input', type: 'text', value: desc || ''});
+
+						inTitle.addEventListener('change', () => {
+							groupTitleB.innerHTML = (identifierGroup ? `${inTitle.value.trim()} (identifier)` : inTitle.value.trim());
+							group.setAttribute('tt-group-name', inTitle.value.trim());
+						});
+
+						inDesc.addEventListener('change', () => {
+							groupDescEM.innerHTML = inDesc.value.trim();
+							group.setAttribute('tt-group-description', inDesc.value.trim());
+						});
+
+						let trTitle = buildElement({tag: 'tr', children: [
+							{tag: 'td', class: 'mandatory', innerHTML: 'Title'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [inTitle]}]}
+						]});
+						let trDesc = buildElement({tag: 'tr', children: [
+							{tag: 'td', innerHTML: 'Description'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [inDesc]}]}
+						]});
+									
+						let propertyTable = buildElement({tag: 'table', children: [
+							trTitle,
+							trDesc
+						]});
+
+						if(identifierGroup) {
+							let inConstructor = buildElement({tag: 'input', type: 'text', value: constructor || ''});
+							let chkSinglePage = buildElement({tag: 'input', type: 'checkbox'});
+
+							group.setAttribute('tt-constructor', constructor);
+							inConstructor.addEventListener('change', () => {
+								group.setAttribute('tt-constructor', inConstructor.value.trim());
+							});
+
+							let trConstructor = buildElement({tag: 'tr', children: [
+								{tag: 'td', class: 'mandatory', innerHTML: 'Constructor'},
+								{tag: 'td', children: [{tag: 'em', style: {fontSize: '0.8em'}, innerHTML: 'Only fields in the identifier group are usable here'},{tag: 'div', class: 'content', children: [inConstructor]},{tag: 'a', style: {fontSize: '0.8em'}, href: '/help/expressions', target: '_blank', innerHTML: 'View documentation'}]}
+							]});
+
+							let trSinglePage = buildElement({tag: 'tr', children: [
+								{tag: 'td', innerHTML: 'Barcode reader'},
+								{tag: 'td', children: [{tag: 'div', class: 'content', children: [chkSinglePage]}]}
+							]});
+
+							propertyTable.appendChild(trConstructor);
+						}
+
+						radio.addEventListener('change', () => {
+							let oldTTFieldProperty = document.querySelector('div.tt-field-properties.tt-field-active');
+							if(oldTTFieldProperty) oldTTFieldProperty.setAttribute('class', 'tt-field-properties')
+							
+							if(radio.checked) {
+								fieldProperties.setAttribute('class', 'tt-field-properties tt-field-active');
+							}
+						});
+
+						fieldProperties.appendChild(propertyTable);
+						properties.appendChild(fieldProperties);
+
+						return `GROUP${workingGroupInc}`;
+					}
+
+					function stringToTrimmedArray(input) {
+						let alts = input.trim().split('\n');
+						for(let x = 0; x < alts.length; x++) {
+							alts[x] = alts[x].trim();
+						}
+						return alts;
+					}
+
+					let workingFieldInc = 0;
+					function createFieldElement(data, groupID) {
+						console.log(data);
+						console.log(typeof data.mandatory);
+						workingFieldInc++; //Ensure this is at the top
+						let group = document.querySelector(`div.tt-group[tt-editor-group-id="${groupID}"]`);
+
+						let field = buildElement({tag: 'div', class: 'tt-field', 'tt-id': data.id})
+						let fieldTitleB = buildElement({tag: 'b', innerHTML: data.title});
+						let fieldIDSpan = buildElement({tag: 'span', innerHTML: data.id});
+						let fieldDescEM = buildElement({tag: 'em', innerHTML: data.description || ''});
+						let radio = buildElement({
+							tag: 'input',
+							type: 'radio',
+							class: 'tt-list-item-radio',
+							id: `radio${workingFieldInc}`, 
+							name: 'tt-radio', 
+							'tt-field': data.id });
+						let label = buildElement({
+							tag: 'label',
+							for: `radio${workingFieldInc}`,
+							class: 'tt-list-item',
+							'tt-type': data.type,
+							children: [
+								fieldTitleB, {tag: 'span', innerHTML: ' ['},
+								fieldIDSpan, {tag: 'span', innerHTML: ']'},
+								{tag: 'br'},
+								fieldDescEM
+							] });
+
+						field.appendChild(radio);
+						field.appendChild(label);
+						group.appendChild(field);
+
+						let fieldProperties = buildElement({tag: 'div', class: 'tt-field-properties', 'tt-field': data.id});
+						let fieldAdjustment = buildElement({tag: 'div', class: 'tt-field-adjustment'})
+
+						let btnMoveUp = buildElement({tag: 'div', class: 'abutton tt-move-up', title: 'Flytta upp', role: 'button', 'aria-label': 'Move the field up one step'});
+						let btnMoveDown = buildElement({tag: 'div', class: 'abutton tt-move-down', title: 'Flytta ner', role: 'button', 'aria-label': 'Move the field down one step'});
+						let btnRemove = buildElement({tag: 'div', class: 'abutton tt-delete', title: 'Ta bort', role: 'button', 'aria-label': 'Remove the field'});
+
+						fieldAdjustment.appendChild(btnMoveUp);
+						fieldAdjustment.appendChild(btnMoveDown);
+						fieldAdjustment.appendChild(btnRemove);
+
+						btnMoveUp.addEventListener('click', () => {
+							if(field.previousSibling && field.previousSibling.getAttribute('class') == 'tt-field')
+								field.parentElement.insertBefore(field, field.previousSibling);
+						});
+
+						btnMoveDown.addEventListener('click', () => {
+							if(field.nextSibling && field.nextSibling.nextSibling) {
+								field.parentElement.insertBefore(field, field.nextSibling.nextSibling);
+							} else {
+								field.parentElement.appendChild(field);
+							}
+						});
+
+						btnRemove.addEventListener('click', () => {
+							fancyConfirm('Are you sure?', `Are you sure you want to remove the field with ID '${data.id}'? This can not be undone.`, () => {
+								field.parentElement.removeChild(field);
+								fieldProperties.parentElement.removeChild(fieldProperties);
+							});
+						});
+
+						fieldProperties.appendChild(fieldAdjustment);
+
+						let selType = createTypeSelect();
+						selType.value = data.type;
+
+						let selGroup = buildElement({tag: 'select'})
+						let inTitle = buildElement({tag: 'input', type: 'text', value: data.title});
+						let inDesc = buildElement({tag: 'input', type: 'text', value: data.description || ''});
+						let chkMandatory = buildElement({tag: 'input', type: 'checkbox', checked: (typeof data.mandatory == 'boolean' ? data.mandatory : false)});
+						let chkRemember = buildElement({tag: 'input', type: 'checkbox', checked: (typeof data.remember_values == 'boolean' ? data.remember_values : false)});
+						let inVisibility = buildElement({tag: 'input', type: 'text', value: data.visible_if || ''});
+						let txtAlternatives = buildElement({tag: 'textarea', innerHTML: `${(data.alternatives || []).join('\n')}`});
+						let chkAllowOther = buildElement({tag: 'input', type: 'checkbox', checked: (typeof data.allow_other == 'boolean' ? data.allow_other : false)});
+						let chkChecked = buildElement({tag: 'input', type: 'checkbox', checked: (typeof data.default_checked == 'boolean' ? data.default_checked : false)});
+						let chkBarcode = buildElement({tag: 'input', type: 'checkbox', checked: (typeof data.barcode == 'boolean' ? data.barcode : false)});
+						let inFunction = buildElement({tag: 'input', type: 'text', value: data.function || ''});
+
+						let trID = buildElement({tag: 'tr', children: [
+							{tag: 'td', class: 'mandatory', innerHTML: 'ID'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [{tag: 'em', innerHTML: data.id}]}]}
+						]});
+						let trGroup = buildElement({tag: 'tr', children: [
+							{tag: 'td', class: 'mandatory', innerHTML: 'Group'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [selGroup]}]}
+						]});
+						let trType = buildElement({tag: 'tr', children: [
+							{tag: 'td', class: 'mandatory', innerHTML: 'Type'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [selType]}]}
+						]});
+						let trTitle = buildElement({tag: 'tr', children: [
+							{tag: 'td', class: 'mandatory', innerHTML: 'Title'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [inTitle]}]}
+						]});
+						let trDesc = buildElement({tag: 'tr', children: [
+							{tag: 'td', innerHTML: 'Description'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [inDesc]}]}
+						]});
+						let trMandatory = buildElement({tag: 'tr', children: [
+							{tag: 'td', innerHTML: 'Mandatory'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [chkMandatory]}]}
+						]});
+						let trRemember = buildElement({tag: 'tr', children: [
+							{tag: 'td', innerHTML: 'Remembers values'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [chkRemember]}]}
+						]});
+						let trVisibility = buildElement({tag: 'tr', children: [
+							{tag: 'td', innerHTML: 'Visibility constraint'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [inVisibility]},{tag: 'a', style: {fontSize: '0.8em'}, href: '/help/expressions', target: '_blank', innerHTML: 'View documentation'}]}
+						]});
+						let trAlternatives = buildElement({tag: 'tr', children: [
+							{tag: 'td', innerHTML: 'Alternatives'},
+							{tag: 'td', children: [{tag: 'em', style: {fontSize: '0.8em'}, innerHTML: 'One alternative per row'}, {tag: 'div', class: 'content', children: [txtAlternatives]}]}
+						]});
+						let trAllowOther = buildElement({tag: 'tr', children: [
+							{tag: 'td', innerHTML: 'Allow free text'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [chkAllowOther]}]}
+						]});
+						let trChecked = buildElement({tag: 'tr', children: [
+							{tag: 'td', innerHTML: 'Start checked'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [chkChecked]}]}
+						]});
+						let trBarcode = buildElement({tag: 'tr', children: [
+							{tag: 'td', innerHTML: 'Barcode reader'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [chkBarcode]}]}
+						]});
+						let trFunction = buildElement({tag: 'tr', children: [
+							{tag: 'td', innerHTML: 'Function'},
+							{tag: 'td', children: [{tag: 'div', class: 'content', children: [inFunction]}]}
+						]});
+						
+						let propertyTable = buildElement({tag: 'table', children: [
+							trID,
+							trGroup,
+							trType,
+							trTitle,
+							trDesc,
+							trMandatory,
+							trRemember,
+							trVisibility,
+							trAlternatives,
+							trAllowOther,
+							trChecked,
+							trBarcode,
+							trFunction
+						]});
+
+						let updatePropertyVisibility = (newType) => {
+							trAlternatives.setAttribute('class', 'hidden');
+							trAllowOther.setAttribute('class', 'hidden');
+							trChecked.setAttribute('class', 'hidden');
+							trBarcode.setAttribute('class', 'hidden');
+							trFunction.setAttribute('class', 'hidden');
+
+							label.setAttribute('tt-type', newType);
+
+							switch(newType) {
+								case 1:
+									trBarcode.removeAttribute('class');
+									break;
+								case 3:
+									trAlternatives.removeAttribute('class');
+									trAllowOther.removeAttribute('class');
+									break;
+								case 6:
+									trChecked.removeAttribute('class');
+									break;
+								case 10:
+									trFunction.removeAttribute('class');
+									break;
+							}
+						};
+
+						let compileFieldData = function() {
+							let newFieldData = {
+								id: data.id,
+								title: inTitle.value,
+								type: parseInt(selType.value)
+							};
+
+							if(inDesc.value.trim() != "") newFieldData.description = inDesc.value.trim();
+							if(chkMandatory.checked) newFieldData.mandatory = true;
+							if(chkRemember.checked) newFieldData.remember_values = true;
+							if(inVisibility.value.trim() != "") newFieldData.visible_if = inVisibility.value.trim();
+
+							switch(newFieldData.type) {
+								case 1:
+									if(chkBarcode.checked) newFieldData.barcode = true;
+									break;
+								case 3:
+									newFieldData.alternatives = stringToTrimmedArray(txtAlternatives.value);
+									if(chkAllowOther.checked) newFieldData.allow_other = true;
+									break;
+								case 6:
+									if(chkChecked.checked) newFieldData.default_checked = true;
+									break;
+								case 10:
+									newFieldData.function = inFunction.value.trim();
+									break;
+							}
+
+							if(newFieldData.type != data.type) {
+								updatePropertyVisibility(newFieldData.type);
+							}
+
+							data = newFieldData;
+							label.setAttribute('tt-data', JSON.stringify(newFieldData));
+						}
+
+						inTitle.addEventListener('change', () => {
+							fieldTitleB.innerHTML = inTitle.value.trim();
+							compileFieldData();
+						});
+
+						inDesc.addEventListener('change', () => {
+							fieldDescEM.innerHTML = inDesc.value.trim();
+							compileFieldData();
+						});
+
+						chkMandatory.addEventListener('change', compileFieldData);
+						chkRemember.addEventListener('change', compileFieldData);
+						inVisibility.addEventListener('change', compileFieldData);
+						txtAlternatives.addEventListener('change', compileFieldData);
+						chkAllowOther.addEventListener('change', compileFieldData);
+						chkChecked.addEventListener('change', compileFieldData);
+						chkBarcode.addEventListener('change', compileFieldData);
+						inFunction.addEventListener('change', compileFieldData);
+
+						fieldProperties.appendChild(propertyTable);
+						properties.appendChild(fieldProperties);
+
+						radio.addEventListener('change', () => {
+							let oldTTFieldProperty = document.querySelector('div.tt-field-properties.tt-field-active');
+							if(oldTTFieldProperty) oldTTFieldProperty.setAttribute('class', 'tt-field-properties')
+							
+							if(radio.checked) {
+								fieldProperties.setAttribute('class', 'tt-field-properties tt-field-active');
+
+								while(selGroup.firstChild) selGroup.removeChild(selGroup.firstChild);
+								let groups = document.querySelectorAll('div.tt-group');
+								for(let x = 0; x < groups.length; x++) {
+									let v = groups[x].getAttribute('tt-editor-group-id');
+									let n = groups[x].getAttribute('tt-group-name');
+									selGroup.appendChild(buildElement({tag: 'option', value: v, innerHTML: n}));
+								}
+								selGroup.value = groupID;
+							}
+						});
+
+						selType.addEventListener('change', compileFieldData);
+
+						selGroup.addEventListener('change', () => {
+							let ng = document.querySelector(`div.tt-group[tt-editor-group-id="${selGroup.value}"]`);
+							group.removeChild(field);
+							ng.appendChild(field);
+							group = ng;
+							groupID = selGroup.value;
+						});
+
+						updatePropertyVisibility(data.type);
+						compileFieldData();
+					}
+
+					addGroup.addEventListener('click', () => {
+						let dialog = new FancyDialog('Add a grup');
+						let inName = buildElement({tag: 'input', type: 'text'});
+						let inDesc = buildElement({tag: 'input', type: 'text'});
+						let btnAdd = buildElement({tag: 'input', type: 'submit', value: 'Add'});
+
+						dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'Group title:'}));
+						dialog.content.appendChild(inName);
+						dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'Group description (not required):'}));
+						dialog.content.appendChild(inDesc);
+						dialog.buttons.appendChild(btnAdd);
+
+						btnAdd.addEventListener('click', () => {
+							if(inName.value == '') {
+								fancyAlert('Information missing', 'Group title can not be left blank.');
+								return
+							}
+
+							createGroupElement(inName.value, inDesc.value, false, null);
+							addField.removeAttribute('disabled');
+							dialog.hide();
+						});
+
+						dialog.show();
+					});	
+
+					addField.addEventListener('click', () => {
+						let groups = document.querySelectorAll('div.tt-group');
+
+						let pID = /^[a-z0-9_]+$/;
+						let dialog = new FancyDialog('Add a field');
+						let inID = buildElement({tag: 'input', type: 'text', pattern: '^[a-z0-9_]+$'});
+						let inTitle = buildElement({tag: 'input', type: 'text'});
+						let inType = createTypeSelect();
+						let btnAdd = buildElement({tag: 'input', type: 'submit', value: 'Add'});
+						let inGroup = buildElement({tag: 'select'})
+						
+						for(let x = 0; x < groups.length; x++) {
+							let v = groups[x].getAttribute('tt-editor-group-id');
+							let n = groups[x].getAttribute('tt-group-name');
+							inGroup.appendChild(buildElement({tag: 'option', value: v, innerHTML: n}));
+						}
+
+						dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'Field ID:'}));
+						dialog.content.appendChild(buildElement({tag: 'br'}));
+						dialog.content.appendChild(buildElement({tag: 'em', style: {fontSize: '0.8em'}, innerHTML: 'Must be unique to the sheet and may only contain letters a-z, numbers, and underlines.'}));
+						dialog.content.appendChild(inID);
+						dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'Field title:'}));
+						dialog.content.appendChild(inTitle);
+						dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'Field type:'}));
+						dialog.content.appendChild(inType);
+						dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'Place in grup:'}));
+						dialog.content.appendChild(inGroup);
+						dialog.buttons.appendChild(btnAdd);
+
+						btnAdd.addEventListener('click', () => {
+							let id = inID.value.trim();
+							let title = inTitle.value.trim();
+							let type = inType.value;
+							let group = inGroup.value;
+
+							if(id == "" || title == "" || type == "" || group == "") {
+								fancyAlert('Information missing', 'All fields must be filled in.');
+								return
+							}
+
+							if(document.querySelectorAll(`input[tt-field="${id}"]`).length != 0) {
+								fancyAlert('Conflict', 'The field ID must be unique within the sheet!');
+								return
+							}
+
+							if(!id.match(pID)) {
+								fancyAlert('Bad ID', 'The field ID may only contain letters a-z, numbers, and underlines.');
+								return
+							}
+
+							data = getEmptyTagTagsFieldObject();
+							data.id = id;
+							data.title = title,
+							data.type = parseInt(type);
+							createFieldElement(data, group);
+							dialog.hide();
+						});
+
+						dialog.show();
+					});
+
+					/*  ########################################
+						########################################
+						### SHEET INIT AND SAVE STARTS HERE! ###
+						########################################
+						########################################  */
+
+					function exportFormData() {
+						if(inputFormName.value.trim() == '') {
+							fancyAlert('Name missing', 'You must name the sheet.');
+							return
+						}
+
+						let groups = document.querySelectorAll('div.tt-group:not(.tt-identifier-group)');
+						if(groups.length == 0) {
+							fancyAlert('No groups', 'There are no groups in the sheet.');
+							return
+						}
+
+						let identGroup = document.querySelector('#tt-identifier-group');
+						if(!identGroup) {
+							fancyAlert('Identifier missing', 'There appears to be no identifier group in the sheet, this can not happen normally.');
+							return
+						}
+
+						let ign = identGroup.getAttribute('tt-group-name');
+						let igd = identGroup.getAttribute('tt-group-description');
+						let igc = identGroup.getAttribute('tt-constructor');
+
+						if(!igc || igc == null || igc == '') {
+							fancyAlert('Constructor missing', 'Error: The identifier has no constructor!');
+							return
+						}
+
+						let nig = {
+							title: ign,
+							fields: [],
+							constructor: igc
+						};
+
+						if(igd != '') {
+							nig.description = igd;
+						}
+
+						let iFields = document.querySelectorAll('#tt-identifier-group div.tt-field label.tt-list-item')
+						if(iFields.length == 0) {
+							fancyAlert('No identifier fields', 'Error: The identifier group has no fields!');
+							return
+						}
+
+						for(let f = 0; f < iFields.length; f++) {
+							let field = iFields[f];
+							let fieldData = JSON.parse(field.getAttribute('tt-data'));
+							nig.fields.push(fieldData);
+						}
+
+						let nf = {
+							columns: 2,
+							identifier: nig,
+							groups: []
+						};
+
+						for(let g = 0; g < groups.length; g++) {
+							let group = groups[g];
+							let gi = group.getAttribute('tt-editor-group-id');
+							let gn = group.getAttribute('tt-group-name');
+							let gd = group.getAttribute('tt-group-description');
+
+							let fields = document.querySelectorAll(`div.tt-group[tt-editor-group-id="${gi}"] div.tt-field label.tt-list-item`);
+							if(fields.length == 0) continue;
+
+							let ng = {
+								title: gn,
+								fields: []
+							}
+
+							if(gd != '') {
+								ng.description = gd;
+							}
+
+							for(let f = 0; f < fields.length; f++) {
+								let field = fields[f];
+								let fieldData = JSON.parse(field.getAttribute('tt-data'));
+								ng.fields.push(fieldData);
+							}
+
+							nf.groups.push(ng);
+						}
+
+						if(nf.groups.length == 0) {
+							fancyAlert('No fields', 'Error: There are no fields in the sheet.');
+							return
+						}
+
+						return nf;
+					}
+
+					if(sheetData != null && sheetName != null) {
+						inputFormName.value = sheetName;
+
+						let identGroup = sheetData.identifier;
+						let ig = createGroupElement(identGroup.title, identGroup.description || '', true, identGroup.constructor);
+
+						for(let f = 0; f < identGroup.fields.length; f++) {
+							field = identGroup.fields[f];
+							createFieldElement(field, ig);
+						}
+
+						for(let g = 0; g < sheetData.groups.length; g++) {
+							let group = sheetData.groups[g];
+							let gi = createGroupElement(group.title, group.description || '', false, null);
+
+							for(let f = 0; f < group.fields.length; f++) {
+								field = group.fields[f];
+								createFieldElement(field, gi);
+							}
+						}
+
+						if(sheetData.groups.length > 0) addField.removeAttribute('disabled');
+					} else {
+						createGroupElement('Identifier group', '', true, '');
+					}
+
+					saveSheet.addEventListener('click', () => {
+						new Request(window.location.href)
+							.setLoaderParent(document.body)
+							.onSuccessJSON((data) => {
+								window.location.href = `/projects/${project}/sheets/${data.id}/edit`;
+							})
+							.onError((status, _msg) => fancyAlert('Unexpected error', formatStatusCode(status)))
+							.POST({name: inputFormName.value.trim(), sheet: JSON.stringify(exportFormData())});
+					});
+				</script> 

@@ -1,0 +1,179 @@
+				<h2>'{{.Project}}' sheets</h2>
+				<input type="button" button-color="green" style="margin-bottom: 5px" id="btnUploadSheet" value="Upload a sheet">
+				<input type="button" button-color="green" style="margin-bottom: 5px" id="btnCreateSheet" value="Create a new sheet">
+				<table>
+					<tbody id="sheetsTable">
+						<tr>
+							<th>ID</th>
+							<th>Name</th>
+							<th>Version</th>
+							<th>Actions</th>
+						</tr>{{range .Sheets}}
+						<tr sheet-id="{{.ID}}">
+							<td>{{.ID}}</td>
+							<td>{{.Name}}</td>
+							<td class="version" sheet-id="{{.ID}}">{{.Version}}</td>
+							<td><a class="abutton" style="margin-right: 5px;" button-color="green" href="/projects/{{$.Project}}/sheets/{{.ID}}/edit">Edit</a><input type="button" button-color="blue" sheet-id="{{.ID}}" sheet-name="{{.Name}}" style="margin-right: 5px;" button-type="update" value="Update"><a class="abutton" style="margin-right: 5px;" button-color="green" href="/app/sheets/{{.ID}}">Download</a><input type="button" button-color="red" button-type="delete" sheet-id="{{.ID}}" sheet-name="{{.Name}}" value="Delete"></td>
+						</tr>{{end}}
+					</tbody>
+				</table>
+				<script>
+					let btnUploadSheet = document.querySelector('#btnUploadSheet');
+					let btnCreateSheet = document.querySelector('#btnCreateSheet');
+
+					btnCreateSheet.addEventListener('click', () => window.location.href = `${window.location.href}/create`);
+
+					function initializeDeleteButton(btn, project, sheetID, sheetName) {
+						let sheetTableRow = document.querySelector(`tr[sheet-id="${sheetID}"]`);
+
+						btn.addEventListener('click', () => {
+							fancyConfirm('Delete sheet?', `Are you sure you want to delete '${sheetName}'? No data will be lost.`, () => {
+								new Request(`/projects/${project}/sheets/${sheetID}`)
+									.onSuccess(() => {
+										sheetTableRow.parentNode.removeChild(sheetTableRow);
+									})
+									.onError((status, msg) => { fancyAlert('Error', formatStatusCode(status)); })
+									.DELETE();
+							});
+						});
+					}
+
+					function initializeUpdateButton(btn, project, sheetID, sheetName) {
+						btn.addEventListener('click', () => {
+							let sheetVersionCell = document.querySelector(`td.version[sheet-id="${sheetID}"]`);
+
+							let dialog = new FancyDialog(`Update '${sheetName}'`);
+							dialog.closeButton.value = 'Cancel';
+							let control = buildElement({tag: 'input', type: 'file'});
+							let lbltitle = buildElement({tag: 'span', innerHTML: 'No file selected'});
+							let lbl = buildElement({tag: 'label', class: 'filelbl abutton', role: 'button', children: [
+								lbltitle,
+								control
+							]});
+
+							let doUpload = () => {
+								let file = control.files[0];
+								
+								let formData = new FormData();
+								formData.append('name', sheetName);
+								formData.append(file.name, file);
+
+								new Request(`/projects/${project}/sheets/${sheetID}`)
+									.setContentType(null)
+									.onSuccessJSON((data) => {
+										sheetVersionCell.innerHTML = data.version;
+										dialog.hide();
+									})
+									.onError((status, msg) => { fancyAlert('Error', formatStatusCode(status) + '<br>' + msg); })
+									.PUT(formData);
+							};
+
+							let uploadButton = buildElement({tag: 'input', type: 'button', 'button-color': 'green', value: 'Upload'});
+							uploadButton.addEventListener('click', () => {
+								if(control.files.length > 0 && control.files[0] instanceof File) {
+									doUpload();
+								} else {
+									fancyAlert('Error', 'You must provide a sheet name and select one file');
+								}
+							});
+
+							dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'File:'}));
+							dialog.content.appendChild(lbl);
+							dialog.buttons.appendChild(uploadButton);
+
+							control.addEventListener('change', () => {
+								if(control.files.length > 0) {
+									lbltitle.innerHTML = control.files[0].name;
+								}
+							});
+
+							dialog.show();
+						});
+					}
+
+					let deleteButtons = document.querySelectorAll('input[type="button"][button-type="delete"]');
+					for(let x = 0; x < deleteButtons.length; x++) {
+						let btn = deleteButtons[x];
+						let sheetID = parseInt(btn.getAttribute('sheet-id'));
+						let sheetName = btn.getAttribute('sheet-name');
+						initializeDeleteButton(btn, {{.Project}}, sheetID, sheetName);
+					}
+
+					let updateButtons = document.querySelectorAll('input[type="button"][button-type="update"]');
+					for(let x = 0; x < updateButtons.length; x++) {
+						let btn = updateButtons[x];
+						let sheetID = parseInt(btn.getAttribute('sheet-id'));
+						let sheetName = btn.getAttribute('sheet-name');
+						initializeUpdateButton(btn, {{.Project}}, sheetID, sheetName);
+					}
+
+					btnUploadSheet.addEventListener('click', () => {
+						let dialog = new FancyDialog('Upload a file');
+						dialog.closeButton.value = 'Cancel';
+						let control = buildElement({tag: 'input', type: 'file'});
+						let lbltitle = buildElement({tag: 'span', innerHTML: 'No file selected'});
+						let lbl = buildElement({tag: 'label', class: 'filelbl abutton', role: 'button', children: [
+							lbltitle,
+							control
+						]});
+						let nameInput = buildElement({tag: 'input', type: 'text'});
+
+						let doUpload = () => {
+							let file = control.files[0];
+							
+							let formData = new FormData();
+							formData.append('name', nameInput.value);
+							formData.append(file.name, file);
+
+							new Request('/projects/{{.Project}}/sheets')
+								.setContentType(null)
+								.onSuccessJSON((data) => {
+									dialog.hide();
+
+									let editButton = buildElement({tag: 'a', class: 'abutton', href: `/projects/${ {{$.Project}} }/sheets/${data.id}/edit`, innerHTML: 'Edit', style: {marginRight: '5px'}});
+									let updateButton = buildElement({tag: 'input', type: 'button', 'button-color': 'blue', value: 'Update', style: {marginRight: '5px'}});
+									let downloadButton = buildElement({tag: 'a', class: 'abutton', href: `/app/sheets/${data.id}`, innerHTML: 'Download', style: {marginRight: '5px'}});
+									let deleteButton = buildElement({tag: 'input', type: 'button', 'button-color': 'red', value: 'Delete'})
+
+									sheetsTable.appendChild(buildElement({tag: 'tr', 'sheet-id': data.id, children: [
+										{tag: 'td', innerHTML: data.id},
+										{tag: 'td', innerHTML: nameInput.value},
+										{tag: 'td', innerHTML: '1'},
+										{tag: 'td', children: [
+											editButton,
+											updateButton,
+											downloadButton,
+											deleteButton
+										]}
+									]}));
+
+									initializeDeleteButton(deleteButton, {{.Project}}, data.id, nameInput.value);
+								})
+								.onError((status, msg) => { fancyAlert('Error', formatStatusCode(status) + '<br>' + msg); })
+								.POST(formData);
+						};
+
+						let uploadButton = buildElement({tag: 'input', type: 'button', 'button-color': 'green', value: 'Upload'});
+						uploadButton.addEventListener('click', () => {
+							if(nameInput.value != '' && control.files.length > 0 && control.files[0] instanceof File) {
+								doUpload();
+							} else {
+								fancyAlert('Error', 'You must provide a sheet name and select one file');
+							}
+						});
+
+						dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'File:'}));
+						dialog.content.appendChild(lbl);
+						dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'Sheet name:'}));
+						dialog.content.appendChild(nameInput);
+						dialog.buttons.appendChild(uploadButton);
+
+						control.addEventListener('change', () => {
+							if(control.files.length > 0) {
+								lbltitle.innerHTML = control.files[0].name;
+							}
+						});
+
+						dialog.show();
+					});
+				</script>

@@ -1,0 +1,119 @@
+				<main>
+					<!-- Generated HTML from TagTags documentation -->
+					<h2 id="expressions">Expressions</h2>
+					<p>TagTags 2 supports relatively complex expressions, at a level comparable to those in Excel and other spreadsheet applications. Expressions are used in three contexts within the app:</p>
+					<ol type="1">
+					<li>Construction of unique identifiers within each sheet.</li>
+					<li>Calculating/transforming values within the calculated data type.</li>
+					<li>Determining if specific fields should be visible or not based on values in other fields.</li>
+					</ol>
+					<p>Expressions can include variables, i.e. they can pull values from other fields within the same sheet.</p>
+					<h3 id="strings">Strings</h3>
+					<p>Strings should be enclosed using backtiks: `, e.g: <em>`foobar`</em>; alternatively you may use double-quotes: ", eg: <em>“foobar”</em>. TagTags automatically encloses values pulled from other fields that are not numbers or booleans in backtiks.</p>
+					<h3 id="basic-mathematical-operations">Basic mathematical operations</h3>
+					<p>The expression engine supports all basic mathematical operations and boolean comparisons, i.e (with operators in parentheses): addition (+), subtraction (-), multiplication (*), division (/), modulus (%), equals (=), does not equal (!=), greater than (&gt;), greater than or equal to (&gt;=), less than (&lt;), less than or equal to (&lt;=). Comparisons return either TRUE or FALSE, text can also be compared, but for obvious reasons it is only possible to determine if the values are equal or not.</p>
+					<h3 id="functions">Functions</h3>
+					<p>The following functions are implemented in the TagTags expression engine:</p>
+					<ul>
+					<li>abs(x) - Returns the absolute value of x.</li>
+					<li>pow(x,y) - Returns x to the power of y, or NULL if x or y is NULL.</li>
+					<li>sqrt(x) - Returns the square root of x, or NULL if x is NULL.</li>
+					<li>sin(x) - Returns the sine of x, or NULL if x is NULL.</li>
+					<li>cos(x) - Returns the cosine of x, or NULL if x is NULL.</li>
+					<li>tan(x) - Returns the tangent of x, or NULL if x is NULL.</li>
+					<li>asin(x) - Returns the arc sine of x in radians, or NULL if x is NULL.</li>
+					<li>acos(x) - Returns the arc cosine of x in radians, or NULL if x is NULL.</li>
+					<li>atan(x) - Returns the arc tangent of x in radians, or NULL if x is NULL.</li>
+					<li>coalesce(x<sub>1</sub>,x<sub>2</sub>,x<sub>3</sub>,…,x<sub>n</sub>) - Returns the first value that is not NULL.</li>
+					<li>round(x,y) - Returns x rounded to y decimal places, or NULL if x or y is NULL.</li>
+					<li>length(x) - Returns the number of characters in x or NULL if x is NULL.</li>
+					<li>concat(x<sub>1</sub>,x<sub>2</sub>,x<sub>3</sub>,…,x<sub>n</sub>) - Concatenates all arguments to a single string, returns NULL if any value is NULL.</li>
+					<li>right(x, y) - Returns the y right most characters in x, or NULL if x is NULL.</li>
+					<li>left(x, y) - Returns the y left most characters in x, or NULL if x is NULL.</li>
+					<li>contains(x, y) - Returns TRUE if x contains y, otherwise FALSE. Returns NULL if x or y is NULL.</li>
+					<li>startswith(x, y) - Returns TRUE if x starts with y, otherwise FALSE. Returns NULL if x or y is NULL.</li>
+					<li>endswith(x, y) - Returns TRUE if x ends with y, otherwise FALSE. Returns NULL if x or y is NULL.</li>
+					<li>lcase(x) - Returns x in all lowercase letters, or NULL if x is NULL.</li>
+					<li>ucase(x) - Returns x in all capical letters, or NULL if x is NULL.</li>
+					<li>index(x, y) - Returns the index of y in x, or NULL if x or y is NULL. Returns -1 if y is not present in x.</li>
+					<li>and(x<sub>1</sub>,x<sub>2</sub>,x<sub>3</sub>,…,x<sub>n</sub>) - Returns TRUE if all arguments are TRUE.</li>
+					<li>or(x<sub>1</sub>,x<sub>2</sub>,x<sub>3</sub>,…,x<sub>n</sub>) - Returns TRUE if at least one argument is TRUE.</li>
+					<li>if(c,x,y) - Returns x if c is TRUE, otherwise returns y.</li>
+					<li>switch(c,w<sub>1</sub>:t<sub>1</sub>,w<sub>2</sub>:t<sub>2</sub>,…,w<sub>n</sub>:t<sub>n</sub>,e) - Compares c to w<sub>x</sub> and returns t<sub>x</sub> when they match, or e (must be the final argument) if there is no match. Returns NULL if there is no match and no e.</li>
+					</ul>
+					<p>It is possible to nest functions freely, so long as the nested functions return the correct data type. Internally everything is treated as text, so type depends on the context.</p>
+					<h3 id="variables">Variables</h3>
+					<p>Variables are referenced as the field id with a leading dollar sign, i.e. the field with id <em>foobar</em> should be referenced in expressions as <em>$foobar</em>. If a value is set for the variable it will be substituted in the expression, but if there is no value <em>NULL</em> will be used in its place (i.e. <em>no data</em>).</p>
+					<p>If the value in the variable is neither a number nor a boolean, it will be automatically enclosed in backtiks. Additionally, TagTags will escape all operators within values pulled from other fields in the same sheet using HTML escape sequences to avoid unexpected behaviour (excluding leading minus signs at the start of numeric values), these are then unescaped when the results are presented. Keep this in mind when comparing strings that contain characters that are escaped. Character replacement is done according to the table below.</p>
+					<table>
+					<thead>
+					<tr class="header">
+					<th>Character</th>
+					<th>Replaced with</th>
+					<th>Caviat</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr class="odd">
+					<td>+</td>
+					<td><code>&amp;plus;</code></td>
+					<td></td>
+					</tr>
+					<tr class="even">
+					<td>-</td>
+					<td><code>&amp;hyphen;</code></td>
+					<td>Not if it is the leading character followed by a number</td>
+					</tr>
+					<tr class="odd">
+					<td>/</td>
+					<td><code>&amp;sol;</code></td>
+					<td></td>
+					</tr>
+					<tr class="even">
+					<td>*</td>
+					<td><code>&amp;ast;</code></td>
+					<td></td>
+					</tr>
+					<tr class="odd">
+					<td>&lt;</td>
+					<td><code>&amp;#060;</code></td>
+					<td></td>
+					</tr>
+					<tr class="even">
+					<td>&gt;</td>
+					<td><code>&amp;#062;</code></td>
+					<td></td>
+					</tr>
+					<tr class="odd">
+					<td>(</td>
+					<td><code>&amp;lpar;</code></td>
+					<td></td>
+					</tr>
+					<tr class="even">
+					<td>)</td>
+					<td><code>&amp;rpar;</code></td>
+					<td></td>
+					</tr>
+					<tr class="odd">
+					<td>%</td>
+					<td><code>&amp;percnt;</code></td>
+					<td></td>
+					</tr>
+					<tr class="even">
+					<td>=</td>
+					<td><code>&amp;equals;</code></td>
+					<td></td>
+					</tr>
+					<tr class="odd">
+					<td>$</td>
+					<td><code>&amp;#36;</code></td>
+					<td></td>
+					</tr>
+					</tbody>
+					</table>
+					<h3 id="examples">Examples</h3>
+					<p>Given a field with the ID <em>temp</em>, the expression below will convert from Fahrenheit to Celcius.</p>
+					<pre><code>($temp-32)*5/9</code></pre>
+					<p>Given the fields <em>year</em>, <em>sampling</em>, and <em>site</em>, the below argument will construct a sampling ID for the regular stream sampling programme in Krycklan.</p>
+					<pre><code>concat(`1-101`,right($year,2),right(concat(0,$sampling),2),right(concat(0,$site),2))</code></pre>
+				</main>

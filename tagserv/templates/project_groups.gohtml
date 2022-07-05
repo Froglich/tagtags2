@@ -1,0 +1,119 @@
+				<h2>'{{.Project}}' groups</h2>
+				<input type="button" style="margin-bottom: 5px" button-color="green" value="Add group" id="btnAddGroup">
+				<table id="groupsTable">
+					<tr>
+						<th>GroupID</th>
+						<th>GroupName</th>
+						<th>Modification rights</th>
+						<th>Actions</th>
+					</tr>{{range .ProjectGroups}}
+					<tr group-id="{{.ID}}">
+						<td>{{.ID}}</td>
+						<td>{{.Name}}</td>
+						<td><input type="checkbox" group-id="{{.ID}}" group-name="{{.Name}}" chk-type="mod"{{if .ProjMod}} checked{{end}}></td>
+						<td><input type="button" group-id="{{.ID}}" group-name="{{.Name}}" button-color="red" button-type="delete" value="Delete"></td>
+					</tr>{{end}}
+				</table>
+				<script>
+					let allGroups = {{.AllGroups}};
+					let project = '{{.Project}}';
+
+					function initializeModChk(chk, groupID, groupName) {
+						chk.addEventListener('change', () => {
+							fancyConfirm('Confirm', `Are you sure you want to change the project modification rights for group '${groupName}'?`, () => {
+								new Request(`/projects/${project}/groups/${groupID}`)
+									.onError((status, msg) => { fancyDialog(formatStatusCode(status)); })
+									.PUT({can_modify: chk.checked ? 'true' : 'false'});
+							}, () => {
+								chk.checked = !chk.checked;
+							});
+						});
+					}
+
+					function initializeDeleteButton(btn, groupID, groupName) {
+						btn.addEventListener('click', () => {
+							fancyConfirm('Confirm', `Are you sure you want to remove the group '${groupName}' from this project?`, () => {
+								let projTr = document.querySelector(`tr[group-id="${groupID}"]`);
+								new Request(`/projects/${project}/groups/${groupID}`)
+									.onSuccess(() => { projTr.parentNode.removeChild(projTr); })
+									.onError((status, msg) => { fancyDialog(formatStatusCode(status)); })
+									.DELETE();
+							});
+						});
+					}
+
+					let modChks = document.querySelectorAll('input[type="checkbox"][chk-type="mod"]');
+					for(let x = 0; x < modChks.length; x++) {
+						let chk = modChks[x];
+						let groupID = parseInt(chk.getAttribute('group-id'));
+						let groupName = chk.getAttribute('group-name');
+						initializeModChk(chk, groupID, groupName);
+					}
+
+					let delBtns = document.querySelectorAll('input[type="button"][button-type="delete"]');
+					for(let x = 0; x < delBtns.length; x++) {
+						let btn = delBtns[x];
+						let groupID = parseInt(btn.getAttribute('group-id'));
+						let groupName = btn.getAttribute('group-name');
+						initializeDeleteButton(btn, groupID, groupName);
+					}
+
+					btnAddGroup.addEventListener('click', () => {
+						let dialog = new FancyDialog('Add group to project {{.Project}}');
+						let chkMod = buildElement({tag: 'input', type: 'checkbox'});
+						let lblMod = buildElement({tag: 'label', class: 'chkwlbl', children: [
+							chkMod,
+							{tag: 'span', innerHTML: 'Grant modification rights'}
+						]});
+						let selGroup = buildElement({tag: 'select'});
+						let btnSave = buildElement({tag: 'input', type: 'button', 'button-color': 'green', value: 'Save'});
+
+						for(let x = 0; x < allGroups.length; x++) {
+							selGroup.appendChild(buildElement({tag: 'option', value: allGroups[x].id, innerHTML: allGroups[x].name}))
+						}
+
+						dialog.content.appendChild(selGroup);
+						dialog.content.appendChild(lblMod);
+						dialog.buttons.appendChild(btnSave);
+
+						btnSave.addEventListener('click', () => {
+							if(selGroup.value == '') {
+								fancyAlert('Error', 'No group selected');
+								return;
+							};
+
+							let mod = chkMod.checked;
+							let groupID = parseInt(selGroup.value);
+							let groupName = '';
+							for(let x = 0; x < allGroups.length; x++) {
+								if(allGroups[x].id == groupID) {
+									groupName = allGroups[x].name;
+									break;
+								}
+							}
+
+							new Request(`/projects/${project}/groups`)
+								.setLoaderParent(dialog.dialog)
+								.onSuccess(() => {
+									let delBtn = buildElement({tag: 'input', type: 'button', 'button-color': 'red', value: 'Delete'});
+									let chkTblMod = buildElement({tag: 'input', type: 'checkbox'});
+									chkTblMod.checked = mod;
+
+									groupsTable.appendChild(buildElement({tag: 'tr', 'group-id': groupID, children: [
+										{tag: 'td', innerHTML: groupID},
+										{tag: 'td', innerHTML: groupName},
+										{tag: 'td', children: [chkTblMod]},
+										{tag: 'tr', children: [delBtn]}
+									]}));
+
+									initializeModChk(chkTblMod, groupID, groupName);
+									initializeDeleteButton(delBtn, groupID, groupName);
+									dialog.hide();
+								})
+								.onError((status, msg) => {fancyAlert('Error', formatStatusCode(status) + '<br>The group may already be associated with the project.')})
+								.POST({group: groupID, can_modify: mod});
+						});
+
+						dialog.show();
+					});
+				</script>

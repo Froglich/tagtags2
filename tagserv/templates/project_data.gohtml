@@ -1,0 +1,77 @@
+				<h2>Data for '{{.Project}}'</h2>
+				<input id="tt-download" type="button" value="Download data for selected identifiers as TSV" style="margin-bottom: 5px" disabled>
+				<table>
+					<tr>
+						<th><input type="checkbox" id="tt-toggle-all"></th>
+						<th>Identifier</th>
+						<th>Parameters</th>
+						<th>Datapoints</th>
+						<th>Last modified</th>
+					</tr>{{range .Identifiers}}
+					<tr>
+						<td><input type="checkbox" tt-identifier="{{.Identifier}}" class="tt-toggle-ident"></td>
+						<td><a href="/projects/{{$.Project}}/data/{{.Identifier}}" title="Go to data for project {{$.Project}} and identifier {{.Identifier}}">{{.Identifier}}</a></td>
+						<td>{{.Parameters}}</td>
+						<td>{{.Datapoints}}</td>
+						<td>{{.LastModified}}</td>
+					</tr>{{end}}
+				</table>
+				<script>
+					let ttDownload = document.querySelector('#tt-download');
+					let ttToggleAll = document.querySelector('#tt-toggle-all');
+					let identChks = document.querySelectorAll('input[type="checkbox"].tt-toggle-ident');
+
+					ttToggleAll.addEventListener('change', () => {
+						for(let x = 0; x < identChks.length; x++) {
+							identChks[x].checked = ttToggleAll.checked;
+						}
+
+						if(ttToggleAll.checked) {
+							ttDownload.removeAttribute('disabled');
+						} else {
+							ttDownload.setAttribute('disabled', 'disabled');
+						}
+					});
+
+					for(let x = 0; x < identChks.length; x++) {
+						let chk = identChks[x];
+						chk.addEventListener('change', () => {
+							let selChks = document.querySelectorAll('input[type="checkbox"].tt-toggle-ident:checked');
+
+							if(chk.checked) {
+								ttDownload.removeAttribute('disabled');
+
+								if(selChks.length == identChks.length) ttToggleAll.checked = true;
+							} else if(selChks.length == 0) {
+								ttDownload.setAttribute('disabled', 'disabled');
+								ttToggleAll.checked = false;
+							} else {
+								ttToggleAll.checked = false;
+							}
+						});
+					}
+
+					ttDownload.addEventListener('click', () => {
+						let selChks = document.querySelectorAll('input[type="checkbox"].tt-toggle-ident:checked');
+						let idents = [];
+
+						for(let x = 0; x < selChks.length; x++) {
+							idents.push(selChks[x].getAttribute('tt-identifier'));
+						}
+
+						new Request('/projects/{{.Project}}/download')
+							.setLoaderParent(document.body)
+							.onSuccess((tsv) => {
+								let a = buildElement({
+                                    tag: 'a',                                                    //UTF8 BOM
+                                    href: 'data:application/octet-stream,' + encodeURIComponent('\ufeff' + tsv),
+                                    download: '{{.Project}} TagTags export.tsv',
+                                });
+
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+							})
+							.POST({identifiers: JSON.stringify(idents)});
+					});
+				</script>

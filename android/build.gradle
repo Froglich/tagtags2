@@ -1,0 +1,41 @@
+buildscript {
+    ext.kotlin_version = '1.6.10'               // or latest
+    ext {
+       compileSdkVersion   = 30                // or latest
+       targetSdkVersion    = 30                // or latest
+       appCompatVersion    = "1.1.0"           // or latest
+    }
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.2.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        //classpath 'com.android.tools.build:gradle:3.3.1' // Must use 3.3.1 or higher.  4.x is fine.
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+        maven {
+           // [required] background_fetch
+           url "${project(':background_fetch').projectDir}/libs"
+       }
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(':app')
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

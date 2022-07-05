@@ -1,0 +1,77 @@
+				<h2>Data for <a href="/projects/{{.Project}}/data" title="Go back to the data overview">'{{.Project}}'</a>/'{{.Identifier}}'</h2>
+				<table>
+					<tr>
+						<th>Parameter</th>
+						<th>Value</th>
+						<th>Last modified</th>
+						<th>Alternative values</th>
+					</tr>{{range .DataPoints}}
+					<tr>
+						<td>{{.Parameter}}</td>
+						<td data-type="{{.TypeID}}">{{.Value}}</td>
+						<td>{{.UTCTime}}</td>
+						<td>{{.Alternatives}}</td>
+					</td>{{end}}
+				</table>
+				<script src="/static/scripts/leaflet.js"></script>
+				<script src="/static/scripts/map.defaults.js"></script>
+				<script>
+					let project = '{{.Project}}';
+					let identifier = '{{.Identifier}}';
+
+					let formatImages = () => {
+						let images = document.querySelectorAll('td[data-type="8"]');
+						for(let x = 0; x < images.length; x++) {
+							let i = images[x];
+							let v = i.innerHTML;
+
+							i.innerHTML = '';
+							
+							let ri = document.createElement('img');
+							ri.src = `/app/projects/${project}/data/files/${v}`;
+							ri.alt = `Image from project ${project} and identifier ${identifier}`;
+							ri.style.maxHeight = '250px';
+							i.appendChild(ri);
+						}
+					}
+
+					let formatCoordinates = () => {
+						let pWKT = /POINT ?\((-?[0-9]+(?:\.[0-9]+)?) (-?[0-9]+(?:\.[0-9]+)?) (-?[0-9]+(?:\.[0-9]+)?)\)/;
+						let points = document.querySelectorAll('td[data-type="7"]');
+						for(let x = 0; x < points.length; x++) {
+							let p = points[x];
+							let d = p.innerHTML.match(pWKT);
+							let pos = {
+								lat: parseFloat(d[2]),
+								lon: parseFloat(d[1])
+							};
+
+							p.innerHTML = '';
+
+							console.log(d);
+
+							let m = document.createElement('map');
+							p.appendChild(m);
+							let map = buildDefaultMap(m);
+
+							let marker = L.marker(pos, {icon: L.icon({
+								iconUrl: '/static/images/map_marker.png',
+								shadowUrl: '/static/images/map_marker_shadow.png',
+								iconSize: [32, 32],
+								iconAnchor: [16, 32],
+								shadowSize: [32, 14],
+								shadowAnchor: [6, 12],
+								popupAnchor: [0, -32]
+							})});
+
+							marker.bindPopup(`<b>Latitude:</b> ${d[2]}<br><b>Longitude:</b> ${d[1]}<br><b>Altitude:</b> ${d[3]}m`);
+
+							map.setView(pos, 14);
+
+							marker.addTo(map);
+						}
+					}
+
+					formatImages();
+					formatCoordinates();
+				</script>

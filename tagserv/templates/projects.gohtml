@@ -1,0 +1,53 @@
+                <h2>Projects</h2>{{if .User.FullAccess}}
+				<input type="button" button-color="green" style="margin-bottom: 5px" id="btnAddProject" value="Add project">{{end}}
+				<table id="tblProjects">
+					<tr>
+						<th>Project</th>
+						<th>Sheets</th>
+						<th>Identifiers</th>
+						<th>Datapoints</th>
+						<th>Last modified</th>
+					</tr>{{range .Projects}}
+					<tr>
+						<td><a href="/projects/{{.Project}}" title="Go to project {{.Project}}">{{.Project}}</a></td>
+						<td><a href="/projects/{{.Project}}/sheets" title="Go to sheets for project {{.Project}}">{{.Sheets}}</a></td>
+						<td><a href="/projects/{{.Project}}/data" title="Go to data for project {{.Project}}">{{.Identifiers}}</a></td>
+						<td>{{.Datapoints}}</td>
+						<td>{{.LastModified}}</td>
+					</tr>{{end}}
+				</table>{{if .User.FullAccess}}
+				<script>
+					btnAddProject.addEventListener('click', () => {
+						let dialog = new FancyDialog('Add project');
+						let inputID = buildElement({tag: 'input', type: 'text'});
+						let btnAdd = buildElement({tag: 'input', type: 'button', 'button-color': 'green', value: 'Add project'});
+						dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'Project ID:'}));
+						dialog.content.appendChild(inputID);
+						dialog.buttons.appendChild(btnAdd);
+
+						btnAdd.addEventListener('click', () => {
+							let projectID = inputID.value;
+
+							new Request('/projects')
+								.setLoaderParent(dialog.dialog)
+								.onError((status, msg) => { fancyAlert('Error', formatStatusCode(status) + '<br>' + msg) })
+								.onSuccess(() => {
+									let tblProjects = document.querySelector('#tblProjects');
+
+									tblProjects.appendChild(buildElement({tag: 'tr', children: [
+										{tag: 'td', innerHTML: `<a href="/projects/${projectID}">${projectID}</a>`},
+										{tag: 'td', innerHTML: 0},
+										{tag: 'td', innerHTML: 0},
+										{tag: 'td', innerHTML: 0},
+										{tag: 'td', innerHTML: 'never'}
+									]}));
+
+									dialog.hide();
+								})
+								.onError((status, msg) => { fancyAlert('Error', formatStatusCode(status) + '<br>' + msg); })
+								.POST({id: projectID});
+						});
+
+						dialog.show();
+					});
+				</script>{{end}}

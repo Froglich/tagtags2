@@ -1,0 +1,224 @@
+				<h2>Groups</h2>{{if .User.FullAccess}}
+				<input type="button" button-color="green" value="Add group" id="btnAddGroup" style="margin-bottom: 10px">{{end}}{{range $grp := .Groups}}
+				<div class="accordion" id="group{{$grp.ID}}">
+					<input type="checkbox" class="accordion-checkbox" id="chkGrp{{$grp.ID}}">
+					<label class="accordion-title" for="chkGrp{{$grp.ID}}">{{.Name}}</label>
+					<div class="accordion-content">
+						<h3 style="margin-bottom: 5px">Members</h3>
+						<div id="group{{$grp.ID}}-members">{{range $usr := .Members}}
+							<input type="button"
+								button-color="{{if $usr.GroupMod}}red{{else}}blue{{end}}"
+								usr-button="true"
+								class="member"
+								grp-id="{{$grp.ID}}"
+								grp-name="{{$grp.Name}}"
+								usr-id="{{$usr.ID}}"
+								usr-name="{{$usr.Username}}"
+								grp-mod="{{$usr.GroupMod}}"
+								value="{{$usr.Username}}">{{end}}
+						</div>
+						<div class="accordion-actions">
+							<input type="button" button-color="green" grp-add-member-button="true" grp-id="{{$grp.ID}}" grp-name="{{$grp.Name}}" value="Add member">
+							<input type="button" button-color="red" grp-remove-button="true" grp-id="{{$grp.ID}}" grp-name="{{$grp.Name}}" value="Remove group">
+						</div>
+					</div>
+				</div>{{end}}
+				<script>
+					let users = {{.Users}};
+
+					function initializeGroupMemberButton(btn, groupID, groupName, userID, username, groupMod) {
+						let usrIsMod = groupMod;
+						console.log(usrIsMod);
+
+						btn.addEventListener('click', () => {
+							let dialog = new FancyDialog(username);
+							let chkMod = buildElement({tag: 'input', type: 'checkbox'});
+							let lblMod = buildElement({tag: 'label', class: 'chkwlbl', children: [
+								chkMod,
+								{tag: 'span', innerHTML: 'Group moderator'}
+							]});
+							let btnSave = buildElement({tag: 'input', type: 'button', 'button-color': 'green', value: 'Save'});
+							let btnRemove = buildElement({tag: 'input', type: 'button', 'button-color': 'red', value: 'Remove'});
+							
+							chkMod.checked = usrIsMod;
+
+							dialog.content.appendChild(buildElement({tag: 'p', innerHTML: `Member of the group '${groupName}'`}))
+							dialog.content.appendChild(lblMod);
+							dialog.buttons.appendChild(btnSave);
+							dialog.buttons.appendChild(btnRemove);
+
+							btnSave.addEventListener('click', () => {
+								let mod = chkMod.checked;
+
+								new Request(`/groups/${groupID}/members/${userID}`)
+									.setLoaderParent(dialog.dialog)
+									.onSuccess(() => {
+										usrIsMod = mod;
+										if(mod) btn.setAttribute('button-color', 'red');
+										else btn.setAttribute('button-color', 'blue');
+
+										dialog.hide();
+									})
+									.PUT({modify: mod});
+							});
+
+							btnRemove.addEventListener('click', () => {
+								fancyConfirm('Are you sure?', `Do you want to remove '${username}' from the group '${groupName}'`, () => {
+									new Request(`/groups/${groupID}/members/${userID}`)
+										.setLoaderParent(dialog.dialog)
+										.onSuccess(() => {
+											btn.parentNode.removeChild(btn);
+											dialog.hide();
+										})
+										.onError((status, msg) => {
+											fancyAlert('Error', formatStatusCode(status));
+											dialog.hide();
+										})
+										.DELETE();
+								});
+							});
+
+							dialog.show();
+						});
+					}
+
+					function initializeGroupAddMememberButton(btn, groupID, groupName) {
+						btn.addEventListener('click', () => {
+							let dialog = new FancyDialog(`Add member to ${groupName}`);
+							let chkMod = buildElement({tag: 'input', type: 'checkbox'});
+							let lblMod = buildElement({tag: 'label', class: 'chkwlbl', children: [
+								chkMod,
+								{tag: 'span', innerHTML: 'Make group moderator'}
+							]});
+							let selUser = buildElement({tag: 'select'});
+							let btnSave = buildElement({tag: 'input', type: 'button', 'button-color': 'green', value: 'Save'});
+
+							for(let x = 0; x < users.length; x++) {
+								selUser.appendChild(buildElement({tag: 'option', value: users[x].id, innerHTML: users[x].username}))
+							}
+
+							dialog.content.appendChild(selUser);
+							dialog.content.appendChild(lblMod);
+							dialog.buttons.appendChild(btnSave);
+
+							btnSave.addEventListener('click', () => {
+								if(selUser.value == '') {
+									fancyAlert('Error', 'No user selected');
+									return;
+								};
+
+								let mod = chkMod.checked;
+								let userID = parseInt(selUser.value);
+								let username = '';
+								for(let x = 0; x < users.length; x++) {
+									if(users[x].id == userID) {
+										username = users[x].username;
+										break;
+									}
+								}
+
+								new Request(`/groups/${groupID}/members`)
+									.setLoaderParent(dialog.dialog)
+									.onSuccess(() => {
+										let usrBtn = buildElement({tag: 'input', type: 'button', 'button-color': (mod ? 'red' : 'blue'), value: username});
+										document.querySelector(`#group${groupID}-members`).appendChild(usrBtn);
+										initializeGroupMemberButton(usrBtn, groupID, groupName, selUser.value, username, mod);
+										dialog.hide();
+									})
+									.onError((status, msg) => {fancyAlert('Error', formatStatusCode(status) + '<br>The user may already be a member of the group.')})
+									.POST({user_id: userID, modify: mod});
+							})
+
+							dialog.show();
+						});
+					}
+
+					function initializeRemoveGroupButton(btn, groupID, groupName) {
+						btn.addEventListener('click', () => {
+							fancyConfirm('Please confirm', `Are you sure you want to remove the group '${groupName}'? This operation can not be undone.`, () => {
+								new Request(`/groups/${groupID}`)
+									.onSuccess(() => {
+										let groupNode = document.querySelector(`#group${groupID}`);
+										groupNode.parentNode.removeChild(groupNode);
+									})
+									.onError((status, msg) => { fancyAlert('Error', formatStatusCode(status)); })
+									.DELETE();
+							});
+						});
+					}
+
+					let usrBtns = document.querySelectorAll('input[type="button"][usr-button="true"]');
+					for(let x = 0; x < usrBtns.length; x++) {
+						let btn = usrBtns[x];
+						let groupID = parseInt(btn.getAttribute('grp-id'));
+						let groupName = btn.getAttribute('grp-name');
+						let userID = parseInt(btn.getAttribute('usr-id'));
+						let username = btn.getAttribute('usr-name');
+						let groupMod = btn.getAttribute('grp-mod') == 'true';
+						initializeGroupMemberButton(btn, groupID, groupName, userID, username, groupMod);
+					}
+
+					let addMemberBtns = document.querySelectorAll('input[type="button"][grp-add-member-button="true"]');
+					for(let x = 0; x < addMemberBtns.length; x++) {
+						let btn = addMemberBtns[x];
+						let groupID = parseInt(btn.getAttribute('grp-id'));
+						let groupName = btn.getAttribute('grp-name');
+						initializeGroupAddMememberButton(btn, groupID, groupName);
+					}
+
+					let removeGroupBtns = document.querySelectorAll('input[type="button"][grp-remove-button="true"]');
+					for(let x = 0; x < removeGroupBtns.length; x++) {
+						let btn = removeGroupBtns[x];
+						let groupID = parseInt(btn.getAttribute('grp-id'));
+						let groupName = btn.getAttribute('grp-name');
+						initializeRemoveGroupButton(btn, groupID, groupName);
+					}{{if .User.FullAccess}}
+
+					btnAddGroup.addEventListener('click', () => {
+						let dialog = new FancyDialog('Add group');
+						let inputName = buildElement({tag: 'input', type: 'text'});
+						let btnAdd = buildElement({tag: 'input', type: 'button', 'button-color': 'green', value: 'Add group'});
+						dialog.content.appendChild(buildElement({tag: 'b', innerHTML: 'Group name:'}));
+						dialog.content.appendChild(inputName);
+						dialog.buttons.appendChild(btnAdd);
+
+						btnAdd.addEventListener('click', () => {
+							let groupName = inputName.value;
+
+							new Request('/groups')
+								.setLoaderParent(dialog.dialog)
+								.onError((status, msg) => { fancyAlert('Error', formatStatusCode(status) + '<br>' + msg) })
+								.onSuccessJSON((data) => {
+									let groupID = data.group_id;
+
+									let btnAddMember = buildElement({tag: 'input', type: 'button', 'button-color': 'green', value: 'Add member'});
+									let btnRemoveGroup = buildElement({tag: 'input', type: 'button', 'button-color': 'red', value: 'Remove group'});
+
+									document.querySelector('content').appendChild(buildElement({
+										tag: 'div',
+										class: 'accordion',
+										id: `group${groupID}`,
+										children: [
+											{tag: 'input', type: 'checkbox', class: 'accordion-checkbox', id: `chkGrp${groupID}`},
+											{tag: 'label', for: `chkGrp${groupID}`, class: 'accordion-title', innerHTML: groupName},
+											{tag: 'div', class: 'accordion-content', children: [
+												{tag: 'h3', style: {marginBottom: '5px'}, innerHTML: 'Members'},
+												{tag: 'div', id: `group${groupID}-members`},
+												{tag: 'div', class: 'accordion-actions', children: [
+													btnAddMember,
+													btnRemoveGroup
+												]}
+											]}
+										]
+									}));
+
+									initializeGroupAddMememberButton(btnAddMember, groupID, groupName);
+									initializeRemoveGroupButton(btnRemoveGroup, groupID, groupName);
+									dialog.hide();
+								})
+								.POST({name: groupName});
+						});
+
+						dialog.show();
+					});{{end}}
+				</script>

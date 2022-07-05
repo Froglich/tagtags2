@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>TagTags - {{.Title}}</title>
+        <meta name="description" content="TagTags 2 Server - Web interface">
+        <meta name="author" content="Kim Lindgren">
+        <meta name="copyright" content="Copyright © 2021 Kim Lindgren">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+
+        <link rel="stylesheet" href="/static/stylesheets/fonts/fira/regular/fonts.css" defer>
+        <link rel="stylesheet" href="/static/stylesheets/fonts/fira/condensed/fonts.css" defer>
+        <link rel="stylesheet" href="/static/stylesheets/fonts/fira/mono/fonts.css" defer>
+        <link rel="stylesheet" href="/static/stylesheets/interface.css">
+        <link rel="stylesheet" href="/static/stylesheets/styles.css">
+        <link rel="stylesheet" href="/static/stylesheets/meristem.css">
+        <link rel="stylesheet" href="/static/stylesheets/tagtags.css">
+        <link rel="stylesheet" href="/static/stylesheets/leaflet.css" defer>
+        <link rel="stylesheet" href="/static/stylesheets/fancydialog.css">
+
+        <link rel="icon" type="image/x-icon" href="/static/images/favicon.png">
+        <script src="/static/scripts/glob.js"></script>
+        <script src="/static/scripts/request.js"></script>
+        <script src="/static/scripts/element-builder.js"></script>
+        <script src="/static/scripts/fancydialog.js"></script>
+        <script>
+            function logout() {
+                new Request('/users/session').onSuccess(() => { window.location.reload(); } ).DELETE();
+            }
+        </script>
+    </head>
+    <body>
+        <site-navigation>
+            <h1>TagTags</h1>
+            <ul>{{range .NavigationItems}}
+                <li{{if .Active}} class="active"{{end}}><a href="{{.Path}}" title="Return to the main {{.Title}}-page">{{.Title}}</a></li>{{end}}
+            </ul>
+            <session tabindex="0" role="button" class="signed-in" onclick="logout()" title="Signed in as {{.User.Username}}"></session>
+        </site-navigation>
+        <main>
+            <content>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>TagTags - Login</title>
+        <meta name="description" content="TagTags 2 Server - Web interface">
+        <meta name="author" content="Kim Lindgren">
+        <meta name="copyright" content="Copyright © 2021 Kim Lindgren">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+
+        <link rel="stylesheet" href="/static/stylesheets/fonts/fira/regular/fonts.css" defer>
+        <link rel="stylesheet" href="/static/stylesheets/fonts/fira/condensed/fonts.css" defer>
+        <link rel="stylesheet" href="/static/stylesheets/interface.css">
+        <link rel="stylesheet" href="/static/stylesheets/login.css">
+        <link rel="stylesheet" href="/static/stylesheets/fancydialog.css">
+
+        <link rel="icon" type="image/x-icon" href="/static/images/favicon.png">
+
+        <script src="/static/scripts/fancydialog.js"></script>
+        <script src="/static/scripts/request.js"></script>
+        <script>
+            let querySelector = document.querySelector;
+
+            function login() {
+                let username = document.querySelector('#username').value;
+                let password = document.querySelector('#password').value;
+                let remember = document.querySelector('#remember').checked;
+
+                new Request('/users/session')
+                    .onSuccess((msg) => {
+                        window.location.href = '/';
+                    })
+                    .onError((status, msg) => {
+                        fancyAlert('Status: ' + status + ', ' + msg);
+                    })
+                    .POST({username: username, password: password, remember: remember});
+            }
+        </script>
+    </head>
+    <body>
+        <login>
+            <form action="javascript:login()">
+                <h1>TagTags - Login</h1>
+                <label for="username">Username</label>
+                <input type="text" id="username">
+                <label for="password">Password</label>
+                <input type="password" id="password">
+                <label class="chkwlbl">
+                    <input type="checkbox" id="remember">
+                    <span>Remember me</span>
+                </label>
+                <div style="display: flex">
+                    <div style="flex: 1;"></div>
+                    <label for="sign-in" class="sr-only">Sign in</label>
+                    <input type="submit" id="sign-in" value="Sign in">
+                </div>
+            </form>
+        </login>
+    </body>
+</html>

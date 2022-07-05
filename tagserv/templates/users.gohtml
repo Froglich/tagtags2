@@ -1,0 +1,121 @@
+				<h2>Users</h2>
+				<p><a href="javascript:createUser()">Create a new user</a></p>
+				<p>
+					<ul id="users">{{range .}}
+						<li><a id="a4uid{{.ID}}" href="javascript:editUser({{.ID}})">{{.Username}}{{if .FullAccess}} <b>A</b>{{end}}</a></li>{{end}}
+					</ul>
+				</p>
+				<script>
+					function userDialog(title) {
+						let usernameInput = buildElement({tag: 'input', id: 'usernameInput', type: 'text'});
+						let newPassword = buildElement({tag: 'input', id: 'password', type: 'password'});
+						let newPasswordRepeat = buildElement({tag: 'input', id: 'passwordRepeat', type: 'password'});
+						let adminInput = buildElement({tag: 'input', type: 'checkbox'});
+						let adminChkWLbl = buildElement({tag: 'label', class: 'chkwlbl', children: [
+							adminInput,
+							{tag: 'span', innerHTML: 'Administrator'}
+						]});
+						let saveBtn = buildElement({tag: 'input', type: 'submit', value: 'Save'});
+
+						let dialog = new FancyDialog(title);
+						dialog.content.appendChild(buildElement({tag: 'label', for: 'usernameInput', style: {fontWeight: 'bold'}, innerHTML: 'Username:'}));
+						dialog.content.appendChild(usernameInput);
+						dialog.content.appendChild(adminChkWLbl);
+						dialog.content.appendChild(buildElement({tag: 'label', for: 'password', style: {fontWeight: 'bold'}, innerHTML: 'New password:'}));
+						dialog.content.appendChild(newPassword);
+						dialog.content.appendChild(buildElement({tag: 'label', for: 'passwordRepeat', style: {fontWeight: 'bold'}, innerHTML: 'Repeat new password:'}));
+						dialog.content.appendChild(newPasswordRepeat);
+						dialog.buttons.appendChild(saveBtn);
+
+						dialog.usernameInput = usernameInput;
+						dialog.adminInput = adminInput;
+						dialog.newPassword = newPassword;
+						dialog.newPasswordRepeat = newPasswordRepeat;
+						dialog.saveBtn = saveBtn;
+
+						return dialog;
+					}
+
+					function editUser(uid) {
+						let dialog = userDialog(`Edit user ${uid}`);
+						dialog.show();
+
+						new Request('/users/' + uid)
+							.setLoaderParent(dialog.dialog)
+							.onSuccessJSON((data) => {
+								dialog.usernameInput.value = data.username;
+								dialog.adminInput.checked = data.full_access;
+
+								dialog.title.innerHTML = 'Edit user ' + data.username;
+							})
+							.onError(defaultErrorDialog)
+							.GET();
+
+						dialog.saveBtn.addEventListener('click', () => {
+							let usernameV = dialog.usernameInput.value;
+							let fullAccessV = dialog.adminInput.checked;
+							let newPasswordV = dialog.newPassword.value;
+							let newPasswordRepeatV = dialog.newPasswordRepeat.value;
+
+							new Request('/users/' + uid + '/details')
+								.setLoaderParent(dialog.dialog)
+								.onSuccess(() => {
+									let a = document.querySelector('#a4uid' + uid);
+									let uname = usernameV;
+
+									if(fullAccessV) uname = uname + ' <b>A</b>';
+									a.innerHTML = uname;
+									dialog.hide();
+								})
+								.onError(defaultErrorDialog)
+								.PUT({data: JSON.stringify({username: usernameV, full_access: fullAccessV})});
+
+							if(newPasswordV != '') {
+								if(newPasswordV !== newPasswordRepeatV) {
+									fancyAlert('Input error', 'The passwords are not identical');
+									return
+								}
+
+								new Request('/users/' + uid + '/password')
+									.onError(defaultErrorDialog)
+									.PUT({password: newPasswordV});
+							}
+						});
+					}
+
+					function createUser() {
+						let usersList = document.querySelector('ul#users');
+						let dialog = userDialog('Create a new user');
+
+						dialog.saveBtn.addEventListener('click', () => {
+							let usernameV = dialog.usernameInput.value;
+							let fullAccessV = dialog.adminInput.checked;
+							let newPasswordV = dialog.newPassword.value;
+							let newPasswordRepeatV = dialog.newPasswordRepeat.value;
+
+							if(usernameV === '') {
+								fancyError('Username can not be blank.');
+								return
+							} else if(newPasswordV === '') {
+								fancyError('Password can not be blank.');
+								return
+							} else if(newPasswordV !== newPasswordRepeatV) {
+								fancyError('The passwords do not match.');
+								return
+							}
+
+							new Request('/users')
+								.setLoaderParent(dialog.dialog)
+								.onSuccess((msg) => {
+									usersList.appendChild(buildElement({tag: 'li', children: [
+										{tag: 'a', id: `a4uid${msg}`, innerHTML: `${usernameV} ${(fullAccessV ? '<b>A</b>' : '')}`, href: `javascript:editUser(${msg})`}
+									]}));
+									dialog.hide();
+								})
+								.onError(defaultErrorDialog)
+								.POST({username: usernameV, password: newPasswordV, full_access: fullAccessV});
+						});
+
+						dialog.show();
+					}
+				</script>
