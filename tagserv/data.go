@@ -212,6 +212,12 @@ func postBinaryData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strings.ContainsAny(_f.Filename, `\/`) || _f.Filename == "." || _f.Filename == ".." {
+		w.WriteHeader(http.StatusNotAcceptable)
+		log.Println("possible path exploit detected")
+		return
+	}
+
 	nfile := path.Join("files", _f.Filename)
 
 	if _, err = os.Stat(nfile); err == nil {
