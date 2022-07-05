@@ -575,7 +575,7 @@ func projectDataHandler(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query("SELECT identifier, number_of_parameters, number_of_datapoints, last_modified FROM view_project_identifiers WHERE project = ? ORDER BY last_modified DESC", proj)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("Could not get identifiers for project %s: '%v'\n", proj, err)
+		log.Printf("Could not get identifiers for project: '%v'\n", err)
 		return
 	}
 
@@ -596,7 +596,7 @@ func projectDataHandler(w http.ResponseWriter, r *http.Request) {
 	rows, err = db.Query("SELECT pg.group_id, g.name, pg.can_modify FROM project_groups pg LEFT JOIN groups g ON g.group_id = pg.group_id WHERE pg.project = ?", proj)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("Could not get groups for project %s: '%v'\n", proj, err)
+		log.Printf("Could not get groups for project: '%v'\n", err)
 		return
 	}
 
@@ -606,7 +606,7 @@ func projectDataHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		if err := rows.Scan(&groupID, &groupName, &canModify); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Printf("Could not read group info for project %s: '%v'\n", proj, err)
+			log.Printf("Could not read group info for project: '%v'\n", err)
 			return
 		}
 

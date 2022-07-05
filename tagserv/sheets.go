@@ -109,8 +109,8 @@ func getSheetFromForm(r *http.Request) (string, string, error) {
 		_f := frm.File[f][0]
 
 		if ct := _f.Header.Get("Content-Type"); ct != "text/json" {
-			log.Printf("recieved wrong content-type: %s\n", ct)
-			return "", "", fmt.Errorf("expected text/json, not %s", ct)
+			log.Println("recieved wrong content-type")
+			return "", "", fmt.Errorf("expected text/json, got another content-type")
 		}
 
 		file, err := _f.Open()

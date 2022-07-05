@@ -76,8 +76,6 @@ func postDatapoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Recieved data point from '%s' for project '%s'\n", u.Username, project)
-
 	var dp dataPoint
 	err = json.Unmarshal(rawData, &dp)
 	if err != nil {
@@ -88,7 +86,6 @@ func postDatapoint(w http.ResponseWriter, r *http.Request) {
 
 	if dp.Project != project || dp.Identifier != ident || dp.Parameter != param {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Printf("Falsified datapoint - missmatch: '%s' vs '%s', '%s' vs '%s', '%s' vs '%s'", project, dp.Project, ident, dp.Identifier, param, dp.Parameter)
 		return
 	}
 
@@ -129,8 +126,6 @@ func postData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Recieved data dump from '%s' for project '%s'\n", u.Username, project)
-
 	data := make([]dataPoint, 0)
 	err = json.Unmarshal(rawData, &data)
 	if err != nil {
@@ -144,7 +139,6 @@ func postData(w http.ResponseWriter, r *http.Request) {
 
 		if dp.Project != project {
 			w.WriteHeader(http.StatusBadRequest)
-			log.Printf("Falsified datapoint, project missmatch: '%s' vs '%s'", project, dp.Project)
 			return
 		}
 
@@ -268,8 +262,6 @@ func getData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Data request from %s for project '%s'\n", u.Username, p)
-
 	var rows *sql.Rows
 	var err error
 	var fts float64
@@ -333,6 +325,12 @@ func getBinaryData(w http.ResponseWriter, r *http.Request) {
 	u := validateUser(db, r)
 	if u == nil || !u.canAccessProject(db, p) {
 		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if strings.ContainsAny(fname, `\/`) || fname == "." || fname == ".." {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Println("detected possible path exploit attempt")
 		return
 	}
 
