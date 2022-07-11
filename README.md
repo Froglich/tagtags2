@@ -23,7 +23,7 @@ TagTags 2 has 10 different data types, most of which are equivalent to data type
 6.  Boolean
 7.  Coordinates
 8.  Camera
-9.  ~~~Multiple choise~~~ (to be implemented)
+9.  ~~Multiple choise~~ (to be implemented)
 10. Function field
 
 The data-type of each field in a TagTags sheet affects both how the field is rendered in the app and how the data is formatted in the database.
