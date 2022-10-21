@@ -1,5 +1,13 @@
 				<h2>Data for '{{.Project}}'</h2>
-				<input id="tt-download" type="button" value="Download data for selected identifiers as TSV" style="margin-bottom: 5px" disabled>
+				<div style="display: flex; margin-bottom: 5px">
+					<div style="flex: 1;"></div>
+					<select style="flex: none; margin-right: 5px" id="tt-sheet">
+						<option value="0">Download all values</option>{{range .Sheets}}
+						<option value="{{.ID}}">Format like sheet [{{.ID}}] {{.Name}}</option>{{end}}
+					</select>
+					<input style="flex: none" id="tt-download" type="button" value="Download data for selected identifiers as TSV" disabled>
+				</div>
+				<input style="width: 100%; margin-bottom: 5px" id="tt-search" type="text" class="search">
 				<table>
 					<tr>
 						<th><input type="checkbox" id="tt-toggle-all"></th>
@@ -8,8 +16,8 @@
 						<th>Datapoints</th>
 						<th>Last modified</th>
 					</tr>{{range .Identifiers}}
-					<tr>
-						<td><input type="checkbox" tt-identifier="{{.Identifier}}" class="tt-toggle-ident"></td>
+					<tr tt-searchable="true" tt-identifier="{{.Identifier}}" tt-visible="true">
+						<td><input type="checkbox" tt-searchable="true" tt-identifier="{{.Identifier}}" class="tt-toggle-ident" tt-visible="true"></td>
 						<td><a href="/projects/{{$.Project}}/data/{{.Identifier}}" title="Go to data for project {{$.Project}} and identifier {{.Identifier}}">{{.Identifier}}</a></td>
 						<td>{{.Parameters}}</td>
 						<td>{{.Datapoints}}</td>
@@ -17,21 +25,68 @@
 					</tr>{{end}}
 				</table>
 				<script>
+					let ttSearch = document.querySelector('#tt-search');
 					let ttDownload = document.querySelector('#tt-download');
 					let ttToggleAll = document.querySelector('#tt-toggle-all');
+					let ttSheet = document.querySelector('#tt-sheet');
 					let identChks = document.querySelectorAll('input[type="checkbox"].tt-toggle-ident');
 
+					let ttSheets = document.querySelectorAll('#tt-sheet option');
+					if(ttSheets.length == 2) {
+						ttSheet.value = ttSheets[1].getAttribute('value');
+					}
+
+					function updateVisibleRows() {
+						let query = ttSearch.value;
+						let elems = document.querySelectorAll('[tt-searchable="true"]');
+						
+						if(query == "") for(let x = 0; x < elems.length; x++) {
+							elems[x].setAttribute('tt-visible', 'true');
+						} else for(let x = 0; x < elems.length; x++) {
+							let elem = elems[x];
+							let ident = elem.getAttribute('tt-identifier');
+
+							if(ident.includes(query)) elem.setAttribute('tt-visible', 'true');
+							else elem.setAttribute('tt-visible', 'false');
+						}
+
+						updateToggleAllState()
+					}
+
+					let searchTimer = null;
+					function delayedSearch() {
+						if(searchTimer != null) window.clearTimeout(searchTimer);
+						searchTimer = window.setTimeout(updateVisibleRows, 500);
+					}
+					ttSearch.addEventListener('keyup', delayedSearch);
+
 					ttToggleAll.addEventListener('change', () => {
-						for(let x = 0; x < identChks.length; x++) {
-							identChks[x].checked = ttToggleAll.checked;
+						let visChks = document.querySelectorAll('input[type="checkbox"][tt-visible="true"].tt-toggle-ident');
+
+						for(let x = 0; x < visChks.length; x++) {
+							visChks[x].checked = ttToggleAll.checked;
 						}
 
 						if(ttToggleAll.checked) {
 							ttDownload.removeAttribute('disabled');
-						} else {
+						} if(document.querySelectorAll('input[type="checkbox"].tt-toggle-ident:checked').length == 0) {
 							ttDownload.setAttribute('disabled', 'disabled');
 						}
 					});
+
+					function updateToggleAllState() {
+						let selChks = Array.from(document.querySelectorAll('input[type="checkbox"].tt-toggle-ident:checked'));
+						let visChks = Array.from(document.querySelectorAll('input[type="checkbox"][tt-visible="true"].tt-toggle-ident'));
+
+						for(let x = 0; x < visChks.length; x++) {
+							if(!selChks.includes(visChks[x])) {
+								ttToggleAll.checked = false;
+								return;
+							}
+						}
+
+						ttToggleAll.checked = true;
+					}
 
 					for(let x = 0; x < identChks.length; x++) {
 						let chk = identChks[x];
@@ -40,14 +95,11 @@
 
 							if(chk.checked) {
 								ttDownload.removeAttribute('disabled');
-
-								if(selChks.length == identChks.length) ttToggleAll.checked = true;
 							} else if(selChks.length == 0) {
 								ttDownload.setAttribute('disabled', 'disabled');
-								ttToggleAll.checked = false;
-							} else {
-								ttToggleAll.checked = false;
 							}
+
+							updateToggleAllState();
 						});
 					}
 
@@ -59,7 +111,12 @@
 							idents.push(selChks[x].getAttribute('tt-identifier'));
 						}
 
-						new Request('/projects/{{.Project}}/download')
+						let url = '/projects/{{.Project}}/download';
+						if(ttSheet.value != "0") {
+							url = `/projects/${ {{.Project}} }/download/sheets/${ttSheet.value}`;
+						}
+
+						new Request(url)
 							.setLoaderParent(document.body)
 							.onSuccess((tsv) => {
 								let a = buildElement({

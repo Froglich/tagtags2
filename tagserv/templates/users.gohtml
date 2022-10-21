@@ -10,6 +10,11 @@
 						let usernameInput = buildElement({tag: 'input', id: 'usernameInput', type: 'text'});
 						let newPassword = buildElement({tag: 'input', id: 'password', type: 'password'});
 						let newPasswordRepeat = buildElement({tag: 'input', id: 'passwordRepeat', type: 'password'});
+						let projectsInput = buildElement({tag: 'input', type: 'checkbox'});
+						let projectsChkWLbl = buildElement({tag: 'label', class: 'chkwlbl', children: [
+							projectsInput,
+							{tag: 'span', innerHTML: 'Can create projects'}
+						]});
 						let adminInput = buildElement({tag: 'input', type: 'checkbox'});
 						let adminChkWLbl = buildElement({tag: 'label', class: 'chkwlbl', children: [
 							adminInput,
@@ -20,6 +25,7 @@
 						let dialog = new FancyDialog(title);
 						dialog.content.appendChild(buildElement({tag: 'label', for: 'usernameInput', style: {fontWeight: 'bold'}, innerHTML: 'Username:'}));
 						dialog.content.appendChild(usernameInput);
+						dialog.content.appendChild(projectsChkWLbl);
 						dialog.content.appendChild(adminChkWLbl);
 						dialog.content.appendChild(buildElement({tag: 'label', for: 'password', style: {fontWeight: 'bold'}, innerHTML: 'New password:'}));
 						dialog.content.appendChild(newPassword);
@@ -28,6 +34,7 @@
 						dialog.buttons.appendChild(saveBtn);
 
 						dialog.usernameInput = usernameInput;
+						dialog.projectsInput = projectsInput;
 						dialog.adminInput = adminInput;
 						dialog.newPassword = newPassword;
 						dialog.newPasswordRepeat = newPasswordRepeat;
@@ -44,6 +51,7 @@
 							.setLoaderParent(dialog.dialog)
 							.onSuccessJSON((data) => {
 								dialog.usernameInput.value = data.username;
+								dialog.projectsInput.checked = data.create_projects;
 								dialog.adminInput.checked = data.full_access;
 
 								dialog.title.innerHTML = 'Edit user ' + data.username;
@@ -54,6 +62,7 @@
 						dialog.saveBtn.addEventListener('click', () => {
 							let usernameV = dialog.usernameInput.value;
 							let fullAccessV = dialog.adminInput.checked;
+							let createProjectsV = dialog.projectsInput.checked;
 							let newPasswordV = dialog.newPassword.value;
 							let newPasswordRepeatV = dialog.newPasswordRepeat.value;
 
@@ -68,7 +77,7 @@
 									dialog.hide();
 								})
 								.onError(defaultErrorDialog)
-								.PUT({data: JSON.stringify({username: usernameV, full_access: fullAccessV})});
+								.PUT({data: JSON.stringify({username: usernameV, create_projects: createProjectsV, full_access: fullAccessV})});
 
 							if(newPasswordV != '') {
 								if(newPasswordV !== newPasswordRepeatV) {
@@ -90,6 +99,7 @@
 						dialog.saveBtn.addEventListener('click', () => {
 							let usernameV = dialog.usernameInput.value;
 							let fullAccessV = dialog.adminInput.checked;
+							let createProjectsV = dialog.projectsInput.checked;
 							let newPasswordV = dialog.newPassword.value;
 							let newPasswordRepeatV = dialog.newPasswordRepeat.value;
 
@@ -113,7 +123,7 @@
 									dialog.hide();
 								})
 								.onError(defaultErrorDialog)
-								.POST({username: usernameV, password: newPasswordV, full_access: fullAccessV});
+								.POST({username: usernameV, password: newPasswordV, create_projects: createProjectsV, full_access: fullAccessV});
 						});
 
 						dialog.show();
