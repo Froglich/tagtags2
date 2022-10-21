@@ -1,4 +1,4 @@
-                <h2>Projects</h2>{{if .User.FullAccess}}
+                <h2>Projects</h2>{{if or .User.FullAccess .User.CreateProjects}}
 				<input type="button" button-color="green" style="margin-bottom: 5px" id="btnAddProject" value="Add project">{{end}}
 				<table id="tblProjects">
 					<tr>
@@ -15,7 +15,7 @@
 						<td>{{.Datapoints}}</td>
 						<td>{{.LastModified}}</td>
 					</tr>{{end}}
-				</table>{{if .User.FullAccess}}
+				</table>{{if or .User.FullAccess .User.CreateProjects}}
 				<script>
 					btnAddProject.addEventListener('click', () => {
 						let dialog = new FancyDialog('Add project');
