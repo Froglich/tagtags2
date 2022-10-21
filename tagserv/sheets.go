@@ -35,6 +35,27 @@ func getSheets(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
+func getSheetDetailsForProject(db *sql.DB, project string) ([]sheetDetails, error) {
+	sheets := make([]sheetDetails, 0)
+
+	rows, err := db.Query("SELECT id, version, name FROM sheets WHERE project = ?", project)
+	if err != nil {
+		return nil, err
+	}
+
+	var sheetID int
+	var sheetVersion int
+	var sheetName string
+	for rows.Next() {
+		if err := rows.Scan(&sheetID, &sheetVersion, &sheetName); err != nil {
+			return nil, err
+		}
+		sheets = append(sheets, sheetDetails{ID: sheetID, Version: sheetVersion, Name: sheetName})
+	}
+
+	return sheets, nil
+}
+
 func getSheet(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
@@ -107,11 +128,6 @@ func getSheetFromForm(r *http.Request) (string, string, error) {
 	var sheet string
 	for f := range frm.File {
 		_f := frm.File[f][0]
-
-		if ct := _f.Header.Get("Content-Type"); ct != "text/json" {
-			log.Println("recieved wrong content-type")
-			return "", "", fmt.Errorf("expected text/json, got another content-type")
-		}
 
 		file, err := _f.Open()
 		if err != nil {

@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const majorVersion int = 2 //increment by ONLY 1 when the database schema changes
+const majorVersion int = 3 //increment by ONLY 1 when the database schema changes
 const minorVersion int = 0
 
 func main() {
@@ -61,10 +61,9 @@ func main() {
 	r.HandleFunc("/projects", projectsHandler).Methods("GET")
 	r.HandleFunc("/projects", createProject).Methods("POST")
 	r.HandleFunc("/projects/{project}", projectHandler).Methods("GET")
-	r.HandleFunc("/projects/{project}/download", downloadTSVData).Methods("POST")
+	r.HandleFunc("/projects/{project}/download", downloadAllTSVData).Methods("POST")
+	r.HandleFunc("/projects/{project}/download/sheets/{sheet:[0-9]+}", downloadSheetTSVData).Methods("POST")
 	r.HandleFunc("/projects/{project}/sheets", projectSheetsHandler).Methods("GET")
-	r.HandleFunc("/projects/{project}/sheets", uploadSheet).Methods("POST")
-	r.HandleFunc("/projects/{project}/sheets/create", createSheet).Methods("GET")
 	r.HandleFunc("/projects/{project}/sheets/create", saveSheet).Methods("POST")
 	r.HandleFunc("/projects/{project}/sheets/{sheet:[0-9]+}", updateSheet).Methods("PUT")
 	r.HandleFunc("/projects/{project}/sheets/{sheet:[0-9]+}", deleteSheet).Methods("DELETE")

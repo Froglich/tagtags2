@@ -16,10 +16,11 @@ import (
 )
 
 type user struct {
-	ID         int    `json:"id"`
-	Username   string `json:"username"`
-	FullAccess bool   `json:"full_access,omitempty"`
-	GroupMod   bool   `json:"group_mod,omitempty"`
+	ID             int    `json:"id"`
+	Username       string `json:"username"`
+	CreateProjects bool   `json:"create_projects"`
+	FullAccess     bool   `json:"full_access,omitempty"`
+	GroupMod       bool   `json:"group_mod,omitempty"`
 }
 
 type group struct {
@@ -59,13 +60,13 @@ func (u *user) canAccessProject(db *sql.DB, proj string) bool {
 		return true
 	}
 
-	row := db.QueryRow("SELECT COALESCE(COUNT(*), 0) \"count\" FROM user_groups ug LEFT JOIN project_groups pg on ug.group_id = pg.group_id WHERE ug.user_id = ? AND pg.project = ?", u.ID, proj)
-	var count int
-	if err := row.Scan(&count); err != nil {
+	row := db.QueryRow("SELECT viewable FROM view_project_access vpa WHERE vpa.user_id = ? AND vpa.project = ?", u.ID, proj)
+	var viewable int
+	if err := row.Scan(&viewable); err != nil {
 		return false
 	}
 
-	return count > 0
+	return viewable == 1
 }
 
 func (u *user) canModifyProject(db *sql.DB, proj string) bool {
@@ -73,13 +74,13 @@ func (u *user) canModifyProject(db *sql.DB, proj string) bool {
 		return true
 	}
 
-	row := db.QueryRow("SELECT COALESCE(COUNT(*), 0) \"count\" FROM user_groups ug LEFT JOIN project_groups pg on ug.group_id = pg.group_id WHERE ug.user_id = ? AND pg.project = ? AND pg.can_modify = 1", u.ID, proj)
-	var count int
-	if err := row.Scan(&count); err != nil {
+	row := db.QueryRow("SELECT editable FROM view_project_access vpa WHERE vpa.user_id = ? AND vpa.project = ?", u.ID, proj)
+	var editable int
+	if err := row.Scan(&editable); err != nil {
 		return false
 	}
 
-	return count > 0
+	return editable == 1
 }
 
 func (u *user) canAccessSheet(db *sql.DB, sheet int) bool {
@@ -87,13 +88,13 @@ func (u *user) canAccessSheet(db *sql.DB, sheet int) bool {
 		return true
 	}
 
-	row := db.QueryRow("SELECT COALESCE(COUNT(*), 0) \"count\" FROM user_groups ug LEFT JOIN project_groups pg on ug.group_id = pg.group_id LEFT JOIN sheets s on pg.project = s.project WHERE ug.user_id = ? AND s.id = ?", u.ID, sheet)
-	var count int
-	if err := row.Scan(&count); err != nil {
+	row := db.QueryRow("SELECT viewable FROM view_sheet_access vsa WHERE vsa.user_id = ? AND vsa.sheet_id = ?", u.ID, sheet)
+	var viewable int
+	if err := row.Scan(&viewable); err != nil {
 		return false
 	}
 
-	return count > 0
+	return viewable == 1
 }
 
 func (u *user) getAccessibleSheets(db *sql.DB) []sheetDetails {
@@ -104,7 +105,7 @@ func (u *user) getAccessibleSheets(db *sql.DB) []sheetDetails {
 	if u.FullAccess {
 		sql = "SELECT id, project, version, name FROM sheets"
 	} else {
-		sql = "SELECT DISTINCT s.id, s.project, s.version, s.name FROM sheets s LEFT JOIN project_groups pg on s.project = pg.project LEFT JOIN user_groups ug on pg.group_id = ug.group_id	WHERE user_id = ?"
+		sql = "SELECT sheet_id, project, sheet_version, sheet_name FROM view_sheet_access WHERE user_id = ? AND viewable = 1"
 		params = append(params, u.ID)
 	}
 
@@ -185,21 +186,23 @@ func getSessionIdentifier(r *http.Request) string {
 }
 
 func checkCredentials(db *sql.DB, username string, password string) *user {
-	row := db.QueryRow("SELECT user_id, pwhash, full_access FROM users WHERE username = ?", username)
+	row := db.QueryRow("SELECT user_id, pwhash, create_projects, full_access FROM users WHERE username = ?", username)
 
 	var userID int
 	var hash string
-	var fullAccess bool
+	var createProjects uint
+	var fullAccess uint
 	var u user
 
-	if err := row.Scan(&userID, &hash, &fullAccess); err == nil {
+	if err := row.Scan(&userID, &hash, &createProjects, &fullAccess); err == nil {
 		comparison := []byte(password)
 		dbhash := []byte(hash)
 
 		if err := bcrypt.CompareHashAndPassword(dbhash, comparison); err == nil {
 			u.ID = userID
 			u.Username = username
-			u.FullAccess = fullAccess
+			u.CreateProjects = createProjects == 1
+			u.FullAccess = fullAccess == 1
 			return &u
 		}
 	} else {
@@ -223,17 +226,19 @@ func checkCookieCredentials(db *sql.DB, r *http.Request) *user {
 	identifier := getSessionIdentifier(r)
 
 	if identifier != "" {
-		row := db.QueryRow("SELECT s.user_id, u.username, u.full_access FROM current_sessions s LEFT JOIN users u ON u.user_id = s.user_id WHERE identifier = $1", identifier)
+		row := db.QueryRow("SELECT s.user_id, u.username, u.create_projects, u.full_access FROM current_sessions s LEFT JOIN users u ON u.user_id = s.user_id WHERE identifier = ?", identifier)
 
 		var userID int
 		var username string
-		var fullAccess bool
-		err := row.Scan(&userID, &username, &fullAccess)
+		var createProjects uint
+		var fullAccess uint
+		err := row.Scan(&userID, &username, &createProjects, &fullAccess)
 		if err == nil {
 			return &user{
-				ID:         userID,
-				Username:   username,
-				FullAccess: fullAccess,
+				ID:             userID,
+				Username:       username,
+				CreateProjects: createProjects == 1,
+				FullAccess:     fullAccess == 1,
 			}
 		}
 	}
@@ -332,6 +337,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("username")
 	pass := r.FormValue("password")
 	fullAccess, _ := strconv.ParseBool(r.FormValue("full_access"))
+	createProjects, _ := strconv.ParseBool(r.FormValue("create_projects"))
 	defer db.Close()
 
 	user := validateUser(db, r)
@@ -349,7 +355,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("INSERT INTO users(username, pwhash, full_access) VALUES(?, ?, ?)", name, rawHash, fullAccess)
+	_, err = db.Exec("INSERT INTO users(username, pwhash, create_projects, full_access) VALUES(?, ?, ?)", name, rawHash, createProjects, fullAccess)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -439,7 +445,7 @@ func setUserDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := db.Exec("UPDATE users SET username = ?, full_access = ? WHERE user_id = ?", nu.Username, nu.FullAccess, uid)
+	_, err := db.Exec("UPDATE users SET username = ?, create_projects = ?, full_access = ? WHERE user_id = ?", nu.Username, nu.CreateProjects, nu.FullAccess, uid)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, "Could not update the user, is the username taken?")

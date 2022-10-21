@@ -148,9 +148,10 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	u := requireValidUser(db, w, r)
+	fmt.Println(u)
 	if u == nil {
 		return
-	} else if !u.FullAccess {
+	} else if !u.FullAccess && !u.CreateProjects {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -162,7 +163,7 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := db.Exec("INSERT INTO projects(project) VALUES(?)", projectID); err != nil {
+	if _, err := db.Exec("INSERT INTO projects(project, created_by) VALUES(?, ?)", projectID, u.ID); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error while inserting project: '%v'", err)
 		log.Println(err)
@@ -301,16 +302,18 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := db.QueryRow("SELECT username, full_access FROM users WHERE user_id = ?", uid)
+	row := db.QueryRow("SELECT username, create_projects, full_access FROM users WHERE user_id = ?", uid)
 	var username string
+	var createProjects uint
 	var fullAccess uint
-	if err := row.Scan(&username, &fullAccess); err != nil {
+	if err := row.Scan(&username, &createProjects, &fullAccess); err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	var pu user
 	pu.Username = username
+	pu.CreateProjects = createProjects == 1
 	pu.FullAccess = fullAccess == 1
 
 	w.Write(pu.toJSON())
@@ -405,26 +408,15 @@ func projectSheetsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pd.Project = proj
-	pd.Sheets = make([]sheetDetails, 0)
 
-	rows, err := db.Query("SELECT id, version, name FROM sheets WHERE project = ?", proj)
+	sheets, err := getSheetDetailsForProject(db, proj)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(err)
+		log.Printf("Could not get sheet details for project: '%v'", err)
 		return
 	}
 
-	var sheetID int
-	var sheetVersion int
-	var sheetName string
-	for rows.Next() {
-		if err := rows.Scan(&sheetID, &sheetVersion, &sheetName); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Println(err)
-			return
-		}
-		pd.Sheets = append(pd.Sheets, sheetDetails{ID: sheetID, Version: sheetVersion, Name: sheetName})
-	}
+	pd.Sheets = sheets
 
 	sendDefaultPage(w, "project_sheets.gohtml", "Project sheets", ProjectsPage, u, pd)
 }
@@ -564,7 +556,17 @@ func projectDataHandler(w http.ResponseWriter, r *http.Request) {
 		CanModify     bool
 		ProjectGroups []group
 		AllGroups     []group
+		Sheets        []sheetDetails
 	}
+
+	sheets, err := getSheetDetailsForProject(db, proj)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("Could not get sheets for project: '%v'\n", err)
+		return
+	}
+
+	pd.Sheets = sheets
 
 	pd.Project = proj
 	pd.Identifiers = make([]webIdentifier, 0)
