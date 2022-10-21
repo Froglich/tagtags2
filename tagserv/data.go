@@ -370,14 +370,6 @@ func passFileToClient(w http.ResponseWriter, filename string, title string) erro
 	return nil
 }
 
-/*type ttTransactTable struct {
-	TableName string
-}
-
-func createTransactTable(db *sql.DB, project string, identifiers []string) (*ttTransactTable, error) {
-
-}*/
-
 type tempFile struct {
 	FileName string
 }
@@ -396,35 +388,76 @@ func writeTempFile(content string) (*tempFile, error) {
 	return &tempFile{FileName: fn}, nil
 }
 
-func projectDataToTSV(db *sql.DB, project string, identifiers []string) (string, error) {
-	identString := strings.Join(identifiers, "")
-	rows, err := db.Query("SELECT DISTINCT parameter FROM latest_data WHERE instr(?,identifier) > 0 AND project = ? ORDER BY parameter", identString, project)
+func queryInStringFromArray(arr []string) string {
+	idStrA := make([]string, len(arr))
+
+	for x := range arr {
+		idStrA[x] = "?"
+	}
+
+	return fmt.Sprintf("(%s)", strings.Join(idStrA, ","))
+}
+
+func stringSliceToInterfaceSlice(stringSlice []string) []interface{} {
+	is := make([]interface{}, len(stringSlice))
+
+	for x := range stringSlice {
+		is[x] = interface{}(stringSlice[x])
+	}
+
+	return is
+}
+
+func sheetProjectDataToTSV(db *sql.DB, project string, sheet int, identifiers []string) (string, error) {
+	ttSheet, err := getSheetFromDB(db, sheet)
 	if err != nil {
 		return "", err
 	}
+
+	params := ttSheet.getAllFields()
+
+	return projectDataToTSV(db, project, identifiers, params, queryInStringFromArray(identifiers))
+}
+
+func allProjectDataToTSV(db *sql.DB, project string, identifiers []string) (string, error) {
 	params := make([]string, 0)
+	queryInString := queryInStringFromArray(identifiers)
+	queryParams := make([]string, 0)
+	queryParams = append(queryParams, identifiers...)
+	queryParams = append(queryParams, project)
+
+	rows, err := db.Query(fmt.Sprintf("SELECT DISTINCT parameter FROM latest_data WHERE identifier IN %s AND project = ? ORDER BY parameter", queryInString), stringSliceToInterfaceSlice(queryParams)...)
+	if err != nil {
+		return "", err
+	}
+
 	var param string
 	for rows.Next() {
 		if err := rows.Scan(&param); err != nil {
-			log.Printf("Could not enumerate parameters: '%v'\n", err)
 			return "", err
 		}
+
 		params = append(params, param)
 	}
 
+	return projectDataToTSV(db, project, identifiers, params, queryInString)
+}
+
+func projectDataToTSV(db *sql.DB, project string, identifiers []string, params []string, queryInString string) (string, error) {
 	tsv := []string{fmt.Sprintf("Project\tIdentifier\t%s", strings.Join(params, "\t"))}
 
 	subqueries := make([]string, 0)
-	queryParams := make([]any, 0)
+	queryParams := make([]string, 0)
 	for x := range params {
 		subqueries = append(subqueries, "COALESCE((SELECT value FROM latest_data WHERE project = a.project AND identifier = a.identifier AND parameter = ?),'')")
 		queryParams = append(queryParams, params[x])
 	}
 
-	query := fmt.Sprintf("SELECT project,identifier,%s FROM (SELECT DISTINCT project,identifier FROM latest_data WHERE instr(?,identifier) > 0 AND project = ?) a ORDER BY identifier", strings.Join(subqueries, ","))
-	queryParams = append(queryParams, identString, project)
+	query := fmt.Sprintf("SELECT project,identifier,%s FROM (SELECT DISTINCT project,identifier FROM latest_data WHERE identifier IN %s AND project = ?) a ORDER BY identifier", strings.Join(subqueries, ","), queryInString)
+	queryParams = append(queryParams, identifiers...)
+	queryParams = append(queryParams, project)
 
-	rows, err = db.Query(query, queryParams...)
+	rows, err := db.Query(query, stringSliceToInterfaceSlice(queryParams)...)
 	if err != nil {
 		log.Printf("Could not query for project data: '%v'\n", err)
 		return "", err
@@ -453,7 +486,7 @@ func projectDataToTSV(db *sql.DB, project string, identifiers []string) (string,
 	return strings.Join(tsv, "\n"), nil
 }
 
-func downloadTSVData(w http.ResponseWriter, r *http.Request) {
+func downloadAllTSVData(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	defer db.Close()
 
@@ -473,7 +506,7 @@ func downloadTSVData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tsv, err := projectDataToTSV(db, p, idents)
+	tsv, err := allProjectDataToTSV(db, p, idents)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("Could not export data to TSV: '%v'\n", err)
@@ -489,5 +522,44 @@ func downloadTSVData(w http.ResponseWriter, r *http.Request) {
 	defer tf.remove()
 
 	w.Header().Set("Content-disposition", fmt.Sprintf("filename=\"%s TagTags-export %d identifiers.tsv\"", p, len(idents)))
+	fmt.Fprint(w, tsv)
+}
+
+func downloadSheetTSVData(w http.ResponseWriter, r *http.Request) {
+	db := getDBConnection()
+	project := mux.Vars(r)["project"]
+	sheet, _ := strconv.Atoi(mux.Vars(r)["sheet"])
+
+	u := validateUser(db, r)
+	if u == nil || !u.canAccessProject(db, project) || !sheetBelongsToProject(db, project, sheet) {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	var idents []string
+	var rawIdents = r.FormValue("identifiers")
+	err := json.Unmarshal([]byte(rawIdents), &idents)
+	if err != nil {
+		w.WriteHeader(http.StatusNotAcceptable)
+		log.Printf("An error occurred while unmarshaling identifiers JSON: '%v'\n", err)
+		return
+	}
+
+	tsv, err := sheetProjectDataToTSV(db, project, sheet, idents)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("Could not export data to TSV: '%v'\n", err)
+		return
+	}
+
+	tf, err := writeTempFile(tsv)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("Could not write temporary file: '%v'\n", err)
+		return
+	}
+	defer tf.remove()
+
+	w.Header().Set("Content-disposition", fmt.Sprintf("filename=\"%s (%d) TagTags-export %d identifiers.tsv\"", project, sheet, len(idents)))
 	fmt.Fprint(w, tsv)
 }
