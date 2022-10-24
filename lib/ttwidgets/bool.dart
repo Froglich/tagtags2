@@ -17,8 +17,14 @@ class TagTagsBoolWidget extends StatefulWidget {
       _reportDataDependency;
   final void Function(bool Function())? _reportMandatoryField;
 
-  TagTagsBoolWidget(this._data, this._setData, this._setLateData, this._value, this._rememberedValue,
-      this._reportDataDependency, this._reportMandatoryField);
+  TagTagsBoolWidget(
+      this._data,
+      this._setData,
+      this._setLateData,
+      this._value,
+      this._rememberedValue,
+      this._reportDataDependency,
+      this._reportMandatoryField);
 
   @override
   _TagTagsBoolWidgetState createState() => _TagTagsBoolWidgetState();
@@ -31,7 +37,8 @@ class _TagTagsBoolWidgetState extends State<TagTagsBoolWidget> {
 
   void update(val) {
     var _v = val ? 'TRUE' : 'FALSE';
-    widget._setData(widget._data.id, widget._data.type, _v, true, widget._data.rememberValues);
+    widget._setData(widget._data.id, widget._data.type, _v, true,
+        widget._data.rememberValues);
 
     print(val);
     setState(() {
@@ -41,10 +48,12 @@ class _TagTagsBoolWidgetState extends State<TagTagsBoolWidget> {
   }
 
   void setVisibility(bool vis) {
-    if(mounted) setState(() {
+    if (mounted)
+      setState(() {
+        _visible = vis;
+      });
+    else
       _visible = vis;
-    });
-    else _visible = vis;
   }
 
   @override
@@ -53,13 +62,15 @@ class _TagTagsBoolWidgetState extends State<TagTagsBoolWidget> {
         widget._value != null &&
         widget._value!.typeID == BOOL_TYPE)
       _checked = (widget._value!.value == 'TRUE');
-    else if (_checked == null && widget._rememberedValue != null &&
+    else if (_checked == null &&
+        widget._rememberedValue != null &&
         widget._rememberedValue!.typeID == BOOL_TYPE &&
         widget._setLateData != null) {
       _checked = (widget._value!.value == 'TRUE');
-      widget._setLateData!(widget._data.id, widget._data.type, widget._rememberedValue!.value);
-    }
-    else if (_checked == null && widget._data.checkedIsDefault) _checked = true;
+      widget._setLateData!(
+          widget._data.id, widget._data.type, widget._rememberedValue!.value);
+    } else if (_checked == null && widget._data.checkedIsDefault)
+      _checked = true;
 
     super.initState();
 
@@ -87,34 +98,37 @@ class _TagTagsBoolWidgetState extends State<TagTagsBoolWidget> {
   @override
   Widget build(BuildContext context) {
     return Visibility(
-        visible: _visible,
-        child: InkWell(
-            onTap: () => update(_checked != null ? !_checked! : true),
-            child: Padding(
-                padding: EdgeInsets.fromLTRB(0, 6, 0, 6),
-                child: Row(children: [
-                  SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: TagTagsCheckbox(checked: _checked)),
-                  Expanded(
-                      child: Row(children: [
-                    SizedBox(width: 5),
-                    Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Text(widget._data.title,
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Visibility(
-                              visible: widget._data.description != null,
-                              child: Text(widget._data.description ?? '',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontStyle: FontStyle.italic)))
-                        ])
-                  ])),
-                  if (_highlighted) TagTagsIcons.warningIcon
-                ]))));
+      visible: _visible,
+      child: Column(children: [
+        SizedBox(height: 5),
+        InkWell(
+          onTap: () => update(_checked != null ? !_checked! : true),
+          child: Row(
+            children: [
+              SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: TagTagsCheckbox(checked: _checked)),
+              SizedBox(width: 5),
+              Flexible(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                Text(widget._data.title,
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Visibility(
+                    visible: widget._data.description != null,
+                    child: Text(widget._data.description ?? '',
+                        style: TextStyle(
+                            fontSize: 11, fontStyle: FontStyle.italic))),
+              ])),
+              if (_highlighted) TagTagsIcons.warningIcon,
+            ],
+          ),
+        ),
+        SizedBox(height: 5),
+      ]),
+    );
   }
 }
