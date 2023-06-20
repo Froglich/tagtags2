@@ -1,7 +1,7 @@
 CREATE TABLE tagtags (
     schema_version INTEGER NOT NULL
 );
-INSERT INTO tagtags(schema_version) VALUES (2);
+INSERT INTO tagtags(schema_version) VALUES (3);
 
 CREATE TABLE users (
     user_id INTEGER NOT NULL PRIMARY KEY,
