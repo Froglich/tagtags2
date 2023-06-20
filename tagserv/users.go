@@ -355,7 +355,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("INSERT INTO users(username, pwhash, create_projects, full_access) VALUES(?, ?, ?)", name, rawHash, createProjects, fullAccess)
+	_, err = db.Exec("INSERT INTO users(username, pwhash, create_projects, full_access) VALUES(?, ?, ?, ?)", name, rawHash, createProjects, fullAccess)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

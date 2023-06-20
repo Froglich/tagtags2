@@ -64,6 +64,8 @@ func main() {
 	r.HandleFunc("/projects/{project}/download", downloadAllTSVData).Methods("POST")
 	r.HandleFunc("/projects/{project}/download/sheets/{sheet:[0-9]+}", downloadSheetTSVData).Methods("POST")
 	r.HandleFunc("/projects/{project}/sheets", projectSheetsHandler).Methods("GET")
+	r.HandleFunc("/projects/{project}/sheets", uploadSheet).Methods("POST")
+	r.HandleFunc("/projects/{project}/sheets/create", createSheet).Methods("GET")
 	r.HandleFunc("/projects/{project}/sheets/create", saveSheet).Methods("POST")
 	r.HandleFunc("/projects/{project}/sheets/{sheet:[0-9]+}", updateSheet).Methods("PUT")
 	r.HandleFunc("/projects/{project}/sheets/{sheet:[0-9]+}", deleteSheet).Methods("DELETE")
