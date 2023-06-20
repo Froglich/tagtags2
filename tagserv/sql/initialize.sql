@@ -10,6 +10,8 @@ CREATE TABLE users (
     create_projects BOOL NOT NULL DEFAULT FALSE,
     full_access BOOL NOT NULL DEFAULT FALSE
 );
+INSERT INTO users(user_id, username, pwhash, create_projects, full_access)
+VALUES (1, 'admin', '$2b$12$pWsvu.HSkPzSeZrjhDMdnuwZgIHtbLAOoWOpfFay1iUGi6tzVZU6m', TRUE, TRUE);
 
 CREATE TABLE sessions (
     user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
