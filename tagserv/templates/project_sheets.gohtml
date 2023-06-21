@@ -130,7 +130,7 @@
 								.onSuccessJSON((data) => {
 									dialog.hide();
 
-									let editButton = buildElement({tag: 'a', class: 'abutton', href: `/projects/${ {{$.Project}} }/sheets/${data.id}/edit`, innerHTML: 'Edit', style: {marginRight: '5px'}});
+									let editButton = buildElement({tag: 'a', class: 'abutton', href: '/projects/{{$.Project}}/sheets/${data.id}/edit', innerHTML: 'Edit', style: {marginRight: '5px'}});
 									let updateButton = buildElement({tag: 'input', type: 'button', 'button-color': 'blue', value: 'Update', style: {marginRight: '5px'}});
 									let downloadButton = buildElement({tag: 'a', class: 'abutton', href: `/app/sheets/${data.id}`, innerHTML: 'Download', style: {marginRight: '5px'}});
 									let deleteButton = buildElement({tag: 'input', type: 'button', 'button-color': 'red', value: 'Delete'})
