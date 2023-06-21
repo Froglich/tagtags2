@@ -30,6 +30,7 @@
 					let ttToggleAll = document.querySelector('#tt-toggle-all');
 					let ttSheet = document.querySelector('#tt-sheet');
 					let identChks = document.querySelectorAll('input[type="checkbox"].tt-toggle-ident');
+					let projectID = {{.Project}};
 
 					let ttSheets = document.querySelectorAll('#tt-sheet option');
 					if(ttSheets.length == 2) {
@@ -113,7 +114,7 @@
 
 						let url = '/projects/{{.Project}}/download';
 						if(ttSheet.value != "0") {
-							url = `/projects/${ {{.Project}} }/download/sheets/${ttSheet.value}`;
+							url = `/projects/${projectID}/download/sheets/${ttSheet.value}`;
 						}
 
 						new Request(url)
