@@ -1,8 +1,6 @@
-import 'package:background_fetch/background_fetch.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:tagtags2/views/download.dart';
 import 'database.dart';
 import 'package:path/path.dart';
 import 'dart:io';
@@ -337,61 +335,6 @@ class TagTagsServer {
       return Future.error(e);
     }
   }
-}
-
-bool backgroundSyncEnabled = false;
-void backgroundSyncHeadless(HeadlessTask task) async {
-  String taskId = task.taskId;
-  bool isTimeout = task.timeout;
-
-  if(isTimeout) {
-    backgroundSyncEnabled = false;
-    print("[TagTags background sync - TERM] Headless task timed-out: $taskId");
-    BackgroundFetch.finish(taskId);
-    return;
-  }
-
-  backgroundSyncEnabled = true;
-  print("[TagTags background sync - INIT] Headless sync event started.");
-
-  TagTagsDatabase db = await TagTagsDatabase().init();
-  var connectivityResult = await Connectivity().checkConnectivity();
-  if(connectivityResult == ConnectivityResult.mobile && !db.settings.syncOverMobile) {
-    print("[TagTags background sync - INIT] Headless sync event canceled because WiFi is not available.");
-    BackgroundFetch.finish(taskId);
-    return;
-  }
-
-  List<String> projects = await db.getSyncableProjects();
-  for(var x = 0; x < projects.length && backgroundSyncEnabled; x++) {
-    var proj = projects[x];
-    var tts = await db.getProjectServer(proj);
-
-    var ttds = await db.getUnsyncedBasicData(proj);
-    for(var y = 0; y < ttds.data.length && backgroundSyncEnabled; y++) {
-      var dp = ttds.data[y];
-
-      print('[TagTags background sync - SYNC] Synchronizing datapoint: ${dp['project']}, ${dp['identifier']}, ${dp['parameter']}.');
-
-      if(!await tts.syncDatapoint(db, dp)) {
-        print('[TagTags background sync - ERROR] Could not synchronize a datapoint.');
-      };
-    }
-
-    ttds = await db.getUnsyncedComplexData(proj);
-    for(var y = 0; y < ttds.data.length && backgroundSyncEnabled; y++) {
-      try {
-        await tts.uploadBinaryData(ttds.data[y]);
-        await db.setDataPointSynced(ttds.data[y]);
-      } catch (e) {
-        print(
-            '[TagTags background sync - ERROR] Could not synchronize binary data: $e.');
-      }
-    }
-  }
-
-  print("[TagTags background sync - TERM] Headless task finished: $taskId");
-  if(backgroundSyncEnabled) BackgroundFetch.finish(taskId);
 }
 
 Future<bool> greenForSyncing(TagTagsDatabase db) async {

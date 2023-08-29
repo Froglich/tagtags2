@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import '../views/download.dart';
 import 'sheet.dart';
 import 'syncing.dart';
 import 'package:path_provider/path_provider.dart';

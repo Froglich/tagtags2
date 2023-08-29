@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -41,14 +40,18 @@ class _TagTagsCameraWidgetState extends State<TagTagsCameraWidget> {
   final picker = ImagePicker();
 
   Future<File> move(File source, String newPath) async {
-    if (!(await Permission.storage.request().isGranted)) {
+    /*if (!(await Permission.accessMediaLocation.request().isGranted)) {
       return Future.error("Permission to access device storage not granted.");
-    }
+    }*/
 
     if (_image != null) await _image!.delete();
 
     try {
-      return await source.rename(newPath);
+      File target = File(newPath);
+      target.writeAsBytesSync(source.readAsBytesSync());
+
+      return target;
+      //return await source.rename(newPath);
     } on FileSystemException catch (e) {
       var newFile = await source.copy(newPath);
       await source.delete();

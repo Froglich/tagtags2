@@ -1,10 +1,13 @@
 import 'dart:io';
 
-//import 'package:path/path.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:tagtags2/alert.dart';
 import 'package:tagtags2/base/constants.dart';
 import 'package:tagtags2/base/database.dart';
+import 'package:path/path.dart';
+
 import '../files.dart';
 
 class TagTagsExportView extends StatefulWidget {
@@ -35,21 +38,11 @@ class _TagTagsExportViewState extends State<TagTagsExportView> {
   void _exportData() async {
     String p = _selectedValue!;
 
-    Directory d = await pickDirectory(context);
-    File f = genExportFile(d, p);
+    File f = await genTemporaryFile(p);
     var data = await widget._db.exportData(p);
 
-    try {
-      f.writeAsStringSync(data);
-    } on FileSystemException catch(e) {
-      noticeDialog(context, 'Could not export data', e.message, TagTagsIcons.largeErrorIcon);
-      return;
-    } catch(e) {
-      noticeDialog(context, 'Could not export data', 'Unexpected error', TagTagsIcons.largeErrorIcon);
-      return;
-    }
-
-    noticeDialog(context, 'Export complete', 'Data exported as "${getBasename(f.path)}"', TagTagsIcons.largeInfoIcon);
+    f.writeAsStringSync(data);
+    await Share.shareXFiles([XFile(f.path)]);
   }
 
   DropdownButton _buildDropdown(List<String> projects) {
