@@ -362,7 +362,6 @@ class TagTagsExpression {
     for (var pSimpleOperation in pSimpleOperations) {
       var operation = pSimpleOperation.firstMatch(s);
       while (operation != null) {
-        var o = s.substring(operation.start, operation.end);
         var res = _combine(operation.group(1), operation.group(2), operation.group(3));
         s = s.substring(0, operation.start) + res + s.substring(operation.end);
         operation = pSimpleOperation.firstMatch(s);

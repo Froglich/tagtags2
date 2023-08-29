@@ -98,7 +98,7 @@ class _TagTagsSyncWidgetState extends State<TagTagsSyncWidget> {
           progress = 0;
         });
         
-        var files = await widget._db.getMissingComplexData(proj);;
+        var files = await widget._db.getMissingComplexData(proj);
 
         for(var i = 0; i < files.length; i++) {
           var fname = files[i];

@@ -48,7 +48,7 @@ class TagTagsGroupData {
   final Map _data;
 
   late String title;
-  late String constructor;
+  String? constructor;
   String? description;
   String? visibleIf;
   List<TagTagsFieldData> fields = [];
@@ -70,7 +70,7 @@ class TagTagsGroupData {
     description = _data['description'];
     visibleIf = _data['visible_if'];
     title = _data['title'];
-    constructor = _data['constructor'];
+    constructor = _data['constructor'] ?? null;
     for (var x = 0; x < _data['fields'].length; x++)
       fields.add(TagTagsFieldData(_data['fields'][x]));
   }

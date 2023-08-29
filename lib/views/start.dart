@@ -1,5 +1,3 @@
-import 'package:background_fetch/background_fetch.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:tagtags2/base/constants.dart';
 import 'package:tagtags2/base/syncing.dart';

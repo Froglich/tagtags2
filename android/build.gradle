@@ -2,7 +2,7 @@ buildscript {
     ext.kotlin_version = '1.6.10'               // or latest
     ext {
        compileSdkVersion   = 30                // or latest
-       targetSdkVersion    = 30                // or latest
+       targetSdkVersion    = 33                // or latest
        appCompatVersion    = "1.1.0"           // or latest
     }
     repositories {
@@ -20,11 +20,7 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
-        maven {
-           // [required] background_fetch
-           url "${project(':background_fetch').projectDir}/libs"
-       }
+        mavenCentral()
     }
 }
 
@@ -36,6 +32,6 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-task clean(type: Delete) {
+tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }

@@ -17,7 +17,7 @@ class TagTagsProtIdentView extends StatelessWidget {
             title: Text('Saved identities')
         ),
         body: Scrollbar(
-            isAlwaysShown: true,
+            thumbVisibility: true,
             thickness: 16,
             child: ListView.builder(
                 padding: EdgeInsets.all(10),

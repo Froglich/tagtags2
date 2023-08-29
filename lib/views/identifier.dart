@@ -158,7 +158,7 @@ class _TagTagsProtInitViewState extends State<TagTagsProtInitView> {
             _identifierUpdate(false);
 
             if (_sheet.singlePage) {
-              WidgetsBinding.instance?.addPostFrameCallback((_) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
                 _openCollectionDestructive();
               });
 
