@@ -147,7 +147,7 @@ class TagTagsDatabase {
     if (row.length == 0)
       return Future.error("Could not get most recent synctime");
 
-    return row[0]['synctime'];
+    return row[0]['synctime'] ?? 0.0;
   }
 
   double getCurrentTime() {
