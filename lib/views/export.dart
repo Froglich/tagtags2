@@ -1,12 +1,8 @@
 import 'dart:io';
 
-import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:tagtags2/alert.dart';
-import 'package:tagtags2/base/constants.dart';
 import 'package:tagtags2/base/database.dart';
-import 'package:path/path.dart';
 
 import '../files.dart';
 

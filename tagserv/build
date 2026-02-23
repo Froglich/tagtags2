@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "Building in Debian 10 docker container..."
+podman run --rm \
+	--volume "$HOME/.cache:/var/go-cache:z" \
+	--volume "$HOME/go:/var/go:z" \
+	--volume "`pwd`:/data:z" \
+	gobuildenv bash -c "cd /data && GOCACHE=/var/go-cache GOPATH=/var/go go build"
+echo "Done."
+
+

@@ -1,0 +1,14 @@
+[Unit]
+Description = TagTags Server
+After = network.target
+
+[Service]
+Type=simple
+User=myuser
+WorkingDirectory=/opt/tagtags
+ExecStart=/opt/tagtags/tagserv
+Environment=DATABASE_URL="postgres://myusername:mystrongpassword123@localhost:5432/mydatabase"
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

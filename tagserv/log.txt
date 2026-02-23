@@ -1,0 +1,243 @@
+2023/11/16 15:56:49 Setting up handlers...
+2023/11/16 15:56:49 Listening for connections on '127.0.0.1:42506'
+2023/11/16 15:57:09 upgrading the database...
+2023/11/16 15:57:09 running sql/schema3to4.sql on the database
+2023/11/16 15:57:09 Setting up handlers...
+2023/11/16 15:57:09 Listening for connections on '127.0.0.1:42506'
+2023/11/17 12:59:14 Setting up handlers...
+2023/11/17 12:59:14 Listening for connections on '127.0.0.1:42506'
+2023/11/17 13:02:21 Setting up handlers...
+2023/11/17 13:02:21 Listening for connections on '127.0.0.1:42506'
+2023/11/17 13:37:58 Setting up handlers...
+2023/11/17 13:37:58 Listening for connections on '127.0.0.1:42506'
+2023/11/17 13:38:11 Invalid access attempt from 127.0.0.1:56278
+2023/11/17 14:16:48 Setting up handlers...
+2023/11/17 14:16:48 Listening for connections on '127.0.0.1:42506'
+2023/11/17 14:17:32 Setting up handlers...
+2023/11/17 14:17:32 Listening for connections on '127.0.0.1:42506'
+2023/11/17 14:18:28 Setting up handlers...
+2023/11/17 14:18:28 Listening for connections on '127.0.0.1:42506'
+2023/11/17 14:18:30 Could not get download status: 'no such column: id'
+2023/11/17 14:18:39 Setting up handlers...
+2023/11/17 14:18:39 Listening for connections on '127.0.0.1:42506'
+2023/11/17 14:25:11 Setting up handlers...
+2023/11/17 14:25:11 Listening for connections on '127.0.0.1:42506'
+2023/11/17 14:34:45 upgrading the database...
+2023/11/17 14:34:45 running sql/schema3to4.sql on the database
+2023/11/17 14:34:45 Setting up handlers...
+2023/11/17 14:34:45 Listening for connections on '127.0.0.1:42506'
+2023/11/17 14:37:06 Setting up handlers...
+2023/11/17 14:37:06 Listening for connections on '127.0.0.1:42506'
+2023/11/17 15:22:17 Invalid access attempt from 127.0.0.1:56972
+2023/11/20 10:07:00 Setting up handlers...
+2023/11/20 10:07:00 Listening for connections on '127.0.0.1:42506'
+2023/11/20 10:07:08 Invalid access attempt from 127.0.0.1:51698
+2023/11/20 10:07:22 Invalid access attempt from 127.0.0.1:41050
+2023/11/20 10:12:19 Could not insert download job: 'database is locked'
+2023/11/20 10:12:19 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:19 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:19 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:20 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:22 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:24 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:26 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:28 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:30 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:32 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:34 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:36 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:38 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:40 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:42 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:44 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:46 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:48 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:50 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:52 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:54 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:56 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:12:58 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:00 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:02 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:04 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:06 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:08 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:11 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:12 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:15 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:16 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:18 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:20 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:22 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:24 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:26 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:28 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:30 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:32 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:34 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:36 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:38 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:40 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:42 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:45 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:47 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:48 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:51 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:52 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:55 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:57 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:13:58 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:14:01 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:14:02 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:14:04 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:14:06 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:01 Setting up handlers...
+2023/11/20 10:15:01 Listening for connections on '127.0.0.1:42506'
+2023/11/20 10:15:03 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:04 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:05 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:07 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:09 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:11 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:13 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:15 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:17 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:19 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:22 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:24 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:26 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:28 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:30 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:32 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:34 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:36 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:38 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:40 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:42 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:44 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:46 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:48 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:50 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:52 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:54 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:56 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:15:58 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:00 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:02 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:04 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:06 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:08 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:10 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:12 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:14 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:16 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:18 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:20 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:22 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:24 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:26 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:28 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:30 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:32 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:34 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:36 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:38 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:40 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:42 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:44 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:46 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:48 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:50 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:52 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:54 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:56 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:16:58 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:17:00 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:17:02 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:17:04 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:17:06 Could not get download status: 'sql: no rows in result set'
+2023/11/20 10:27:06 Setting up handlers...
+2023/11/20 10:27:06 Listening for connections on '127.0.0.1:42506'
+2023/11/20 10:29:12 Setting up handlers...
+2023/11/20 10:29:12 Listening for connections on '127.0.0.1:42506'
+2023/11/20 10:30:46 Invalid access attempt from 127.0.0.1:50872
+2023/11/23 13:42:18 Setting up handlers...
+2023/11/23 13:42:18 Listening for connections on '127.0.0.1:42506'
+2023/11/23 13:42:41 Invalid access attempt from 127.0.0.1:44030
+2023/11/23 13:57:32 Setting up handlers...
+2023/11/23 13:57:32 Listening for connections on '127.0.0.1:42506'
+2023/11/23 13:59:49 Setting up handlers...
+2023/11/23 13:59:49 Listening for connections on '127.0.0.1:42506'
+2023/11/23 13:59:51 Invalid access attempt from 127.0.0.1:33188
+2023/11/23 13:59:59 Invalid access attempt from 127.0.0.1:33188
+2023/11/23 14:02:49 Invalid access attempt from 127.0.0.1:46018
+2023/11/23 14:56:49 Invalid access attempt from 127.0.0.1:41484
+2023/11/23 14:57:12 Setting up handlers...
+2023/11/23 14:57:12 Listening for connections on '127.0.0.1:42506'
+2023/11/23 14:57:14 Invalid access attempt from 127.0.0.1:33784
+2023/11/23 14:58:11 Setting up handlers...
+2023/11/23 14:58:11 Listening for connections on '127.0.0.1:42506'
+2023/11/23 14:58:12 Invalid access attempt from 127.0.0.1:44168
+2023/11/23 15:01:52 Invalid access attempt from 127.0.0.1:45252
+2023/11/23 15:03:07 Setting up handlers...
+2023/11/23 15:03:07 Listening for connections on '127.0.0.1:42506'
+2023/11/23 15:03:10 Invalid access attempt from 127.0.0.1:48954
+2023/11/23 15:04:09 Setting up handlers...
+2023/11/23 15:04:09 Listening for connections on '127.0.0.1:42506'
+2023/11/23 15:05:03 Setting up handlers...
+2023/11/23 15:05:03 Listening for connections on '127.0.0.1:42506'
+2023/11/23 15:05:41 Setting up handlers...
+2023/11/23 15:05:41 Listening for connections on '127.0.0.1:42506'
+2023/11/23 15:07:04 conn busy
+2023/11/23 15:07:45 Setting up handlers...
+2023/11/23 15:07:45 Listening for connections on '127.0.0.1:42506'
+2023/11/23 15:07:46 conn busy
+2023/11/23 15:07:58 conn busy
+2023/11/23 15:08:46 Setting up handlers...
+2023/11/23 15:08:46 Listening for connections on '127.0.0.1:42506'
+2023/11/23 15:08:56 Could not fetch project list: 'ERROR: operator does not exist: boolean = integer (SQLSTATE 42883)'
+2023/11/23 15:09:27 Setting up handlers...
+2023/11/23 15:09:27 Listening for connections on '127.0.0.1:42506'
+2023/11/23 15:09:29 Could not scan project list: 'can't scan into dest[5]: cannot scan bool (OID 16) in binary format into *uint'
+2023/11/23 15:09:52 Setting up handlers...
+2023/11/23 15:09:52 Listening for connections on '127.0.0.1:42506'
+2023/11/23 15:09:57 Could not read group info for project: 'can't scan into dest[2]: cannot scan bool (OID 16) in binary format into *int'
+2023/11/23 15:10:24 Setting up handlers...
+2023/11/23 15:10:24 Listening for connections on '127.0.0.1:42506'
+2023/11/23 15:10:37 An error occurred while sending a file: 'open files/TT_fieldphoto_1687357666615.jpg: no such file or directory'
+2023/11/23 15:10:41 Could not query for project data: 'ERROR: syntax error at or near "," (SQLSTATE 42601)'
+2023/11/23 15:10:41 Could not export data to TSV: 'ERROR: syntax error at or near "," (SQLSTATE 42601)'
+2023/11/23 15:13:28 Could not query for project data: 'ERROR: syntax error at or near "," (SQLSTATE 42601)'
+2023/11/23 15:13:28 Could not export data to TSV: 'ERROR: syntax error at or near "," (SQLSTATE 42601)'
+2023/11/24 10:19:42 failed to connect to `host=localhost user=postgres database=postgres`: dial error (dial tcp 127.0.0.1:5434: connect: connection refused)
+2023/11/24 10:20:01 Setting up handlers...
+2023/11/24 10:20:01 Listening for connections on '127.0.0.1:42506'
+2023/11/24 10:20:06 Invalid access attempt from 127.0.0.1:42272
+2023/11/24 10:20:32 Could not query for project data: 'ERROR: syntax error at or near "," (SQLSTATE 42601)'
+2023/11/24 10:20:32 Could not export data to TSV: 'ERROR: syntax error at or near "," (SQLSTATE 42601)'
+2023/11/24 10:20:34 Could not export data to TSV: 'ERROR: syntax error at or near "," (SQLSTATE 42601)'
+2023/11/24 10:21:08 Setting up handlers...
+2023/11/24 10:21:08 Listening for connections on '127.0.0.1:42506'
+2023/11/24 10:21:14 Setting up handlers...
+2023/11/24 10:21:14 Listening for connections on '127.0.0.1:42506'
+2023/11/24 10:21:19 Could not query for project data: 'ERROR: syntax error at or near "," (SQLSTATE 42601)'
+2023/11/24 10:21:19 Could not export data to TSV: 'ERROR: syntax error at or near "," (SQLSTATE 42601)'
+2023/11/24 10:25:11 Setting up handlers...
+2023/11/24 10:25:11 Listening for connections on '127.0.0.1:42506'
+2023/11/24 10:25:13 Could not query for project data: 'ERROR: there is no parameter $0 (SQLSTATE 42P02)'
+2023/11/24 10:25:13 Could not export data to TSV: 'ERROR: there is no parameter $0 (SQLSTATE 42P02)'
+2023/11/24 10:25:34 Setting up handlers...
+2023/11/24 10:25:34 Listening for connections on '127.0.0.1:42506'
+2023/11/24 10:25:36 Could not query for project data: 'ERROR: could not determine data type of parameter $1111 (SQLSTATE 42P18)'
+2023/11/24 10:25:36 Could not export data to TSV: 'ERROR: could not determine data type of parameter $1111 (SQLSTATE 42P18)'
+2023/11/24 10:29:18 Setting up handlers...
+2023/11/24 10:29:18 Listening for connections on '127.0.0.1:42506'
+2023/11/24 10:29:21 Could not query for project data: 'ERROR: could not determine data type of parameter $67 (SQLSTATE 42P18)'
+2023/11/24 10:29:21 Could not export data to TSV: 'ERROR: could not determine data type of parameter $67 (SQLSTATE 42P18)'
+2023/11/24 10:38:48 Setting up handlers...
+2023/11/24 10:38:48 Listening for connections on '127.0.0.1:42506'
+2023/11/24 10:48:23 Invalid access attempt from 127.0.0.1:56192
+2023/11/24 13:18:52 Invalid access attempt from 127.0.0.1:40664
+2023/11/24 13:21:17 Invalid access attempt from 127.0.0.1:52818
+2023/11/24 13:34:19 Setting up handlers...
+2023/11/24 13:34:19 Listening for connections on '127.0.0.1:42506'

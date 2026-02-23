@@ -1,34 +1,30 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func getDBConnection() *sql.DB {
-	db, err := sql.Open("sqlite3", "tagserv.db")
+func getDBConnection() *pgx.Conn {
+	db, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Panicln(err)
-	}
-
-	_, err = db.Exec("PRAGMA foreign_keys = ON")
-	if err != nil {
-		log.Panicln(err)
+		log.Panic(err)
 	}
 
 	return db
 }
 
-func runSQLFile(db *sql.DB, filename string) error {
+func runSQLFile(db *pgx.Conn, filename string) error {
 	log.Printf("running %s on the database", filename)
 
-	rawCmds, err := ioutil.ReadFile(filename)
+	rawCmds, err := os.ReadFile(filename)
 	if err != nil {
 		log.Printf("error reading file: %s\n", filename)
 		return err
@@ -42,7 +38,7 @@ func runSQLFile(db *sql.DB, filename string) error {
 			continue
 		}
 
-		_, err = db.Exec(cmd)
+		_, err = db.Exec(context.Background(), cmd)
 
 		if err != nil {
 			log.Printf("could not execute SQL: %s\n", cmd)
@@ -53,8 +49,8 @@ func runSQLFile(db *sql.DB, filename string) error {
 	return nil
 }
 
-func validateAndInitializeDB(db *sql.DB) {
-	row := db.QueryRow("SELECT schema_version FROM tagtags")
+func validateAndInitializeDB(db *pgx.Conn) {
+	row := db.QueryRow(context.Background(), "SELECT schema_version FROM tagtags")
 	var dbVersion int
 	err := row.Scan(&dbVersion)
 	if err != nil {

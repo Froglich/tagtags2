@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
 import 'package:tagtags2/base/constants.dart';
 import 'package:tagtags2/main.dart';
 import 'package:tagtags2/ttwidgets/extra/checkbox.dart';

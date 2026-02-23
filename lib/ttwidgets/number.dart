@@ -46,7 +46,7 @@ class _TagTagsNumberWidgetState extends State<TagTagsNumberWidget> {
 
   void update(val) {
     if (_timer != null) _timer!.cancel();
-    _timer = Timer(Duration(milliseconds: _highlighted ? 500 : 200), () => {_saveValue(val)});
+    _timer = Timer(Duration(milliseconds: _highlighted ? 500 : 200), () => _saveValue(val));
   }
 
   void setVisibility(bool vis) {

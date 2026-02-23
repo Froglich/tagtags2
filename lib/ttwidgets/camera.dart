@@ -7,7 +7,6 @@ import 'package:tagtags2/alert.dart';
 import 'package:tagtags2/base/constants.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../base/database.dart';
 import '../base/sheet.dart';
 import 'extra/visibility.dart';
@@ -52,7 +51,7 @@ class _TagTagsCameraWidgetState extends State<TagTagsCameraWidget> {
 
       return target;
       //return await source.rename(newPath);
-    } on FileSystemException catch (e) {
+    } on FileSystemException {
       var newFile = await source.copy(newPath);
       await source.delete();
       return newFile;

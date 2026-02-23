@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -10,12 +11,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const majorVersion int = 3 //increment by ONLY 1 when the database schema changes
-const minorVersion int = 0
+const majorVersion int = 4 //increment by ONLY 1 when the database schema changes
+const minorVersion int = 1
 
 func main() {
 	fmt.Printf("Welcome to TagTags server version 2.%d.%d!\n\n", majorVersion, minorVersion)
-	fmt.Println("Copyright (C) 2022 Kim Lindgren")
+	fmt.Println("Copyright (C) 2023 Kim Lindgren")
 	fmt.Println("This program comes with ABSOLUTELY NO WARRANTY. This is free software,")
 	fmt.Println("and you are welcome to redistribute it under certain conditions; visit")
 	fmt.Println("https://www.gnu.org/licenses/gpl-3.0.en.html for details.)")
@@ -31,7 +32,7 @@ func main() {
 
 	db := getDBConnection()
 	validateAndInitializeDB(db)
-	db.Close()
+	db.Close(context.Background())
 
 	log.Println("Setting up handlers...")
 

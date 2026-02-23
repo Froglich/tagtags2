@@ -1,18 +1,19 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5"
 )
 
 type navigationItem struct {
@@ -52,7 +53,7 @@ const (
 
 func loadViews() *template.Template {
 	views := make([]string, 0)
-	files, err := ioutil.ReadDir("templates")
+	files, err := os.ReadDir("templates")
 
 	if err != nil {
 		log.Panicln(err)
@@ -76,7 +77,7 @@ func loadViews() *template.Template {
 
 func buildHeader(title string, u *user, pageType uint) header {
 	db := getDBConnection()
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	navigationItems := []navigationItem{
 		{Title: "Index", Path: "/", Active: pageType == IndexPage},
@@ -121,7 +122,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -133,7 +134,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 func helpExpressionsHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -145,10 +146,9 @@ func helpExpressionsHandler(w http.ResponseWriter, r *http.Request) {
 
 func createProject(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
-	fmt.Println(u)
 	if u == nil {
 		return
 	} else if !u.FullAccess && !u.CreateProjects {
@@ -163,7 +163,7 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := db.Exec("INSERT INTO projects(project, created_by) VALUES(?, ?)", projectID, u.ID); err != nil {
+	if _, err := db.Exec(context.Background(), "INSERT INTO projects(project, created_by) VALUES($1, $2)", projectID, u.ID); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error while inserting project: '%v'", err)
 		log.Println(err)
@@ -172,7 +172,7 @@ func createProject(w http.ResponseWriter, r *http.Request) {
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -182,7 +182,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := db.Query("SELECT user_id, username, full_access FROM users")
+	rows, err := db.Query(context.Background(), "SELECT user_id, username, full_access FROM users")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -191,14 +191,14 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 	users := make([]user, 0)
 	var userID int
 	var username string
-	var fullAccess uint
+	var fullAccess bool
 	for rows.Next() {
 		if err := rows.Scan(&userID, &username, &fullAccess); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		users = append(users, user{ID: userID, Username: username, FullAccess: fullAccess == 1})
+		users = append(users, user{ID: userID, Username: username, FullAccess: fullAccess})
 	}
 
 	sendDefaultPage(w, "users.gohtml", "Users", UsersPage, u, users)
@@ -206,7 +206,9 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 
 func groupsHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
-	defer db.Close()
+	db2 := getDBConnection()
+	defer db.Close(context.Background())
+	defer db2.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -216,12 +218,12 @@ func groupsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var rows *sql.Rows
+	var rows pgx.Rows
 	var err error
 	if u.FullAccess {
-		rows, err = db.Query("SELECT group_id, name FROM groups")
+		rows, err = db.Query(context.Background(), "SELECT group_id, name FROM groups")
 	} else if u.isGroupMod(db) {
-		rows, err = db.Query("SELECT g.group_id, g.name FROM user_groups ug LEFT JOIN groups g ON g.group_id = ug.group_id WHERE ug.user_id = ? AND ug.modify = 1", u.ID)
+		rows, err = db.Query(context.Background(), "SELECT g.group_id, g.name FROM user_groups ug LEFT JOIN groups g ON g.group_id = ug.group_id WHERE ug.user_id = $1 AND ug.modify = 1", u.ID)
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -243,7 +245,7 @@ func groupsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		ur, err := db.Query("SELECT ug.user_id, u.username, ug.modify FROM user_groups ug LEFT JOIN users u ON u.user_id = ug.user_id WHERE ug.group_id = ?", groupID)
+		ur, err := db2.Query(context.Background(), "SELECT ug.user_id, u.username, ug.modify FROM user_groups ug LEFT JOIN users u ON u.user_id = ug.user_id WHERE ug.group_id = $1", groupID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Println(err)
@@ -252,7 +254,7 @@ func groupsHandler(w http.ResponseWriter, r *http.Request) {
 
 		var userID int
 		var userName string
-		var canModify int
+		var canModify bool
 		users := make([]user, 0)
 		for ur.Next() {
 			if err := ur.Scan(&userID, &userName, &canModify); err != nil {
@@ -261,10 +263,7 @@ func groupsHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			usr := user{ID: userID, Username: userName}
-			if canModify == 1 {
-				usr.GroupMod = true
-			}
+			usr := user{ID: userID, Username: userName, GroupMod: canModify}
 			users = append(users, usr)
 		}
 
@@ -292,7 +291,7 @@ func groupsHandler(w http.ResponseWriter, r *http.Request) {
 func userHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	uid := mux.Vars(r)["uid"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -302,10 +301,10 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := db.QueryRow("SELECT username, create_projects, full_access FROM users WHERE user_id = ?", uid)
+	row := db.QueryRow(context.Background(), "SELECT username, create_projects, full_access FROM users WHERE user_id = $1", uid)
 	var username string
-	var createProjects uint
-	var fullAccess uint
+	var createProjects bool
+	var fullAccess bool
 	if err := row.Scan(&username, &createProjects, &fullAccess); err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -313,15 +312,15 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 	var pu user
 	pu.Username = username
-	pu.CreateProjects = createProjects == 1
-	pu.FullAccess = fullAccess == 1
+	pu.CreateProjects = createProjects
+	pu.FullAccess = fullAccess
 
 	w.Write(pu.toJSON())
 }
 
 func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -329,7 +328,7 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	projects := make([]webProject, 0)
-	rows, err := db.Query("SELECT vpa.project, vp.number_of_sheets, vp.number_of_identifiers, vp.number_of_datapoints, vp.last_modified, vpa.editable FROM view_project_access vpa LEFT JOIN view_projects vp ON vpa.project = vp.project WHERE vpa.user_id = ? AND vpa.viewable = 1", u.ID)
+	rows, err := db.Query(context.Background(), "SELECT vpa.project, vp.number_of_sheets, vp.number_of_identifiers, vp.number_of_datapoints, vp.last_modified, vpa.editable FROM view_project_access vpa LEFT JOIN view_projects vp ON vpa.project = vp.project WHERE vpa.user_id = $1 AND vpa.viewable = TRUE", u.ID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("Could not fetch project list: '%v'\n", err)
@@ -341,7 +340,7 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	var identifiers uint
 	var datapoints uint
 	var lastmodified string
-	var editable uint
+	var editable bool
 	for rows.Next() {
 		if err := rows.Scan(&project, &sheets, &identifiers, &datapoints, &lastmodified, &editable); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -349,7 +348,7 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		projects = append(projects, webProject{Project: project, Sheets: sheets, Identifiers: identifiers, Datapoints: datapoints, LastModified: lastmodified, Editable: editable == 1})
+		projects = append(projects, webProject{Project: project, Sheets: sheets, Identifiers: identifiers, Datapoints: datapoints, LastModified: lastmodified, Editable: editable})
 	}
 
 	var pd struct {
@@ -366,7 +365,7 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 func projectHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	proj := mux.Vars(r)["project"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -392,7 +391,7 @@ func projectHandler(w http.ResponseWriter, r *http.Request) {
 func projectSheetsHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	proj := mux.Vars(r)["project"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -429,7 +428,7 @@ type sheetPage struct {
 
 func createSheet(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	proj := mux.Vars(r)["project"]
 
@@ -446,7 +445,7 @@ func createSheet(w http.ResponseWriter, r *http.Request) {
 
 func editSheet(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	proj := mux.Vars(r)["project"]
 	sheet, _ := strconv.Atoi(mux.Vars(r)["sheet"])
@@ -459,7 +458,7 @@ func editSheet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := db.QueryRow("SELECT sheet, name FROM sheets WHERE project = ? AND id = ?", proj, sheet)
+	row := db.QueryRow(context.Background(), "SELECT sheet, name FROM sheets WHERE project = $1 AND id = $2", proj, sheet)
 	var sheetData []byte
 	var name string
 
@@ -475,7 +474,7 @@ func editSheet(w http.ResponseWriter, r *http.Request) {
 func projectGroupsHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	proj := mux.Vars(r)["project"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -495,7 +494,7 @@ func projectGroupsHandler(w http.ResponseWriter, r *http.Request) {
 	pd.ProjectGroups = make([]group, 0)
 	pd.AllGroups = make([]group, 0)
 
-	rows, err := db.Query("SELECT g.group_id, g.name, pg.can_modify FROM project_groups pg LEFT JOIN groups g ON g.group_id = pg.group_id WHERE pg.project = ?", proj)
+	rows, err := db.Query(context.Background(), "SELECT g.group_id, g.name, pg.can_modify FROM project_groups pg LEFT JOIN groups g ON g.group_id = pg.group_id WHERE pg.project = $1", proj)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println(err)
@@ -504,7 +503,7 @@ func projectGroupsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var groupID int
 	var groupName string
-	var modify int
+	var modify bool
 	for rows.Next() {
 		if err := rows.Scan(&groupID, &groupName, &modify); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -512,10 +511,10 @@ func projectGroupsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		pd.ProjectGroups = append(pd.ProjectGroups, group{ID: groupID, Name: groupName, ProjMod: modify == 1})
+		pd.ProjectGroups = append(pd.ProjectGroups, group{ID: groupID, Name: groupName, ProjMod: modify})
 	}
 
-	rows, err = db.Query("SELECT group_id, name FROM groups")
+	rows, err = db.Query(context.Background(), "SELECT group_id, name FROM groups")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println(err)
@@ -538,7 +537,7 @@ func projectGroupsHandler(w http.ResponseWriter, r *http.Request) {
 func projectDataHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	proj := mux.Vars(r)["project"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -574,7 +573,7 @@ func projectDataHandler(w http.ResponseWriter, r *http.Request) {
 	pd.AllGroups = make([]group, 0)
 	pd.CanModify = u.canModifyProject(db, proj)
 
-	rows, err := db.Query("SELECT identifier, number_of_parameters, number_of_datapoints, last_modified FROM view_project_identifiers WHERE project = ? ORDER BY last_modified DESC", proj)
+	rows, err := db.Query(context.Background(), "SELECT identifier, number_of_parameters, number_of_datapoints, last_modified FROM view_project_identifiers WHERE project = $1 ORDER BY last_modified DESC", proj)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("Could not get identifiers for project: '%v'\n", err)
@@ -595,7 +594,7 @@ func projectDataHandler(w http.ResponseWriter, r *http.Request) {
 		pd.Identifiers = append(pd.Identifiers, webIdentifier{Identifier: identifier, Parameters: parameters, Datapoints: datapoints, LastModified: lastmodified})
 	}
 
-	rows, err = db.Query("SELECT pg.group_id, g.name, pg.can_modify FROM project_groups pg LEFT JOIN groups g ON g.group_id = pg.group_id WHERE pg.project = ?", proj)
+	rows, err = db.Query(context.Background(), "SELECT pg.group_id, g.name, pg.can_modify FROM project_groups pg LEFT JOIN groups g ON g.group_id = pg.group_id WHERE pg.project = $1", proj)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("Could not get groups for project: '%v'\n", err)
@@ -604,7 +603,7 @@ func projectDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	var groupID int
 	var groupName string
-	var canModify int
+	var canModify bool
 	for rows.Next() {
 		if err := rows.Scan(&groupID, &groupName, &canModify); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -612,7 +611,7 @@ func projectDataHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		pd.ProjectGroups = append(pd.ProjectGroups, group{ID: groupID, Name: groupName, ProjMod: canModify == 1})
+		pd.ProjectGroups = append(pd.ProjectGroups, group{ID: groupID, Name: groupName, ProjMod: canModify})
 	}
 
 	pd.AllGroups, err = getAllGroups(db)
@@ -629,7 +628,7 @@ func dataIdentifierHandler(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	proj := mux.Vars(r)["project"]
 	ident := mux.Vars(r)["identifier"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -641,7 +640,7 @@ func dataIdentifierHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := db.Query("SELECT parameter, type_id, value, modified, (SELECT COUNT(*) FROM data d WHERE d.project = a.project AND d.identifier = a.identifier AND d.parameter = a.parameter) alternatives FROM (SELECT project, identifier, parameter, type_id, value, modified FROM latest_data WHERE project = ? AND identifier = ?) a ORDER BY modified", proj, ident)
+	rows, err := db.Query(context.Background(), "SELECT parameter, type_id, value, modified, (SELECT COUNT(*) FROM data d WHERE d.project = a.project AND d.identifier = a.identifier AND d.parameter = a.parameter) alternatives FROM (SELECT project, identifier, parameter, type_id, value, modified FROM latest_data WHERE project = $1 AND identifier = $2) a ORDER BY modified", proj, ident)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("Could not query database for data: '%v'\n", err)

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+DATABASE_URL="postgres://postgres:dev@localhost:5434/postgres" ./tagserv

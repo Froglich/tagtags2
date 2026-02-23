@@ -2,11 +2,10 @@ package main
 
 import (
 	"bytes"
-	"database/sql"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -17,11 +16,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5"
 )
 
 func readAllThenClose(rc io.ReadCloser) ([]byte, error) {
 	defer rc.Close()
-	return ioutil.ReadAll(rc)
+	return io.ReadAll(rc)
 }
 
 type dataPoint struct {
@@ -46,8 +46,8 @@ func (dp *dataPoint) toJSON() []byte {
 	return o
 }
 
-func (dp *dataPoint) insert(db *sql.DB) bool {
-	_, err := db.Exec("INSERT INTO data(project, identifier, parameter, type_id, value, modified) VALUES(?,?,?,?,?,?)", dp.Project, dp.Identifier, dp.Parameter, dp.TypeID, dp.Value, dp.Modified)
+func (dp *dataPoint) insert(db *pgx.Conn) bool {
+	_, err := db.Exec(context.Background(), "INSERT INTO data(project, identifier, parameter, type_id, value, modified) VALUES($1,$2,$3,$4,$5,$6)", dp.Project, dp.Identifier, dp.Parameter, dp.TypeID, dp.Value, dp.Modified)
 	if err != nil {
 		log.Printf("Could not save datapoint: '%v'\n", err)
 		return false
@@ -61,12 +61,12 @@ func postDatapoint(w http.ResponseWriter, r *http.Request) {
 	project := mux.Vars(r)["project"]
 	ident := mux.Vars(r)["identifier"]
 	param := mux.Vars(r)["parameter"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	rawData, err := readAllThenClose(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Println(err)
+		log.Printf("while processing datapoint: '%v'", err)
 		return
 	}
 
@@ -79,7 +79,7 @@ func postDatapoint(w http.ResponseWriter, r *http.Request) {
 	var dp dataPoint
 	err = json.Unmarshal(rawData, &dp)
 	if err != nil {
-		log.Println(err)
+		log.Printf("while unmarshalling datapoint: '%v'", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -94,7 +94,7 @@ func postDatapoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := db.QueryRow("SELECT value, modified FROM latest_data WHERE project = ? AND identifier = ? AND parameter = ? AND type_id = ?", dp.Project, dp.Identifier, dp.Parameter, dp.TypeID)
+	row := db.QueryRow(context.Background(), "SELECT value, modified FROM latest_data WHERE project = $1 AND identifier = $2 AND parameter = $3 AND type_id = $4", dp.Project, dp.Identifier, dp.Parameter, dp.TypeID)
 	var val string
 	var mod float64
 	if err := row.Scan(&val, &mod); err != nil {
@@ -111,7 +111,7 @@ func postDatapoint(w http.ResponseWriter, r *http.Request) {
 func postData(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	project := mux.Vars(r)["project"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	rawData, err := readAllThenClose(r.Body)
 	if err != nil {
@@ -152,7 +152,7 @@ func postData(w http.ResponseWriter, r *http.Request) {
 func postBinaryData(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	project := mux.Vars(r)["project"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := validateUser(db, r)
 	if u == nil || !u.canAccessProject(db, project) {
@@ -236,7 +236,7 @@ func postBinaryData(w http.ResponseWriter, r *http.Request) {
 
 	fcontent := readBuffer.Bytes()
 
-	err = ioutil.WriteFile(nfile, fcontent, 0644)
+	err = os.WriteFile(nfile, fcontent, 0644)
 
 	if err != nil {
 		log.Println(err)
@@ -254,7 +254,7 @@ func getData(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	p := mux.Vars(r)["project"]
 	mts := r.Header.Values("x-tagtags-mostrecentsync")
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := validateUser(db, r)
 	if u == nil || !u.canAccessProject(db, p) {
@@ -262,7 +262,7 @@ func getData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var rows *sql.Rows
+	var rows pgx.Rows
 	var err error
 	var fts float64
 
@@ -271,9 +271,9 @@ func getData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err == nil {
-		rows, err = db.Query("SELECT project, identifier, parameter, type_id, value, modified FROM latest_data WHERE project = ? AND synctime > ?", p, fts)
+		rows, err = db.Query(context.Background(), "SELECT project, identifier, parameter, type_id, value, modified FROM latest_data WHERE project = $1 AND synctime > $2", p, fts)
 	} else {
-		rows, err = db.Query("SELECT project, identifier, parameter, type_id, value, modified FROM latest_data WHERE project = ?", p)
+		rows, err = db.Query(context.Background(), "SELECT project, identifier, parameter, type_id, value, modified FROM latest_data WHERE project = $1", p)
 	}
 
 	if err != nil {
@@ -320,7 +320,7 @@ func getBinaryData(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	p := mux.Vars(r)["project"]
 	fname := mux.Vars(r)["filename"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := validateUser(db, r)
 	if u == nil || !u.canAccessProject(db, p) {
@@ -334,7 +334,7 @@ func getBinaryData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := db.QueryRow("SELECT COALESCE(COUNT(*), 0) FROM data WHERE project = ? AND value = ? AND type_id = 8", p, fname)
+	row := db.QueryRow(context.Background(), "SELECT COALESCE(COUNT(*), 0) FROM data WHERE project = $1 AND value = $2 AND type_id = 8", p, fname)
 	var count int
 	if err := row.Scan(&count); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -392,7 +392,7 @@ func queryInStringFromArray(arr []string) string {
 	idStrA := make([]string, len(arr))
 
 	for x := range arr {
-		idStrA[x] = "?"
+		idStrA[x] = fmt.Sprintf("'%s'", strings.ReplaceAll(arr[x], "'", "\\'")) //Secure enough?
 	}
 
 	return fmt.Sprintf("(%s)", strings.Join(idStrA, ","))
@@ -408,7 +408,7 @@ func stringSliceToInterfaceSlice(stringSlice []string) []interface{} {
 	return is
 }
 
-func sheetProjectDataToTSV(db *sql.DB, project string, sheet int, identifiers []string) (string, error) {
+func sheetProjectDataToTSV(db *pgx.Conn, project string, sheet int, identifiers []string) (string, error) {
 	ttSheet, err := getSheetFromDB(db, sheet)
 	if err != nil {
 		return "", err
@@ -419,14 +419,14 @@ func sheetProjectDataToTSV(db *sql.DB, project string, sheet int, identifiers []
 	return projectDataToTSV(db, project, identifiers, params, queryInStringFromArray(identifiers))
 }
 
-func allProjectDataToTSV(db *sql.DB, project string, identifiers []string) (string, error) {
+func allProjectDataToTSV(db *pgx.Conn, project string, identifiers []string) (string, error) {
 	params := make([]string, 0)
 	queryInString := queryInStringFromArray(identifiers)
-	queryParams := make([]string, 0)
-	queryParams = append(queryParams, identifiers...)
-	queryParams = append(queryParams, project)
+	//queryParams := make([]string, 0)
+	//queryParams = append(queryParams, identifiers...)
+	//queryParams = append(queryParams, project)
 
-	rows, err := db.Query(fmt.Sprintf("SELECT DISTINCT parameter FROM latest_data WHERE identifier IN %s AND project = ? ORDER BY parameter", queryInString), stringSliceToInterfaceSlice(queryParams)...)
+	rows, err := db.Query(context.Background(), fmt.Sprintf("SELECT DISTINCT parameter FROM latest_data WHERE identifier IN %s AND project = $1 ORDER BY parameter", queryInString), project)
 	if err != nil {
 		return "", err
 	}
@@ -443,21 +443,20 @@ func allProjectDataToTSV(db *sql.DB, project string, identifiers []string) (stri
 	return projectDataToTSV(db, project, identifiers, params, queryInString)
 }
 
-func projectDataToTSV(db *sql.DB, project string, identifiers []string, params []string, queryInString string) (string, error) {
+func projectDataToTSV(db *pgx.Conn, project string, identifiers []string, params []string, queryInString string) (string, error) {
 	tsv := []string{fmt.Sprintf("Project\tIdentifier\t%s", strings.Join(params, "\t"))}
 
 	subqueries := make([]string, 0)
 	queryParams := make([]string, 0)
 	for x := range params {
-		subqueries = append(subqueries, "COALESCE((SELECT value FROM latest_data WHERE project = a.project AND identifier = a.identifier AND parameter = ?),'')")
 		queryParams = append(queryParams, params[x])
+		subqueries = append(subqueries, fmt.Sprintf("COALESCE((SELECT value FROM latest_data WHERE project = a.project AND identifier = a.identifier AND parameter = $%d),'')", len(queryParams)))
 	}
 
-	query := fmt.Sprintf("SELECT project,identifier,%s FROM (SELECT DISTINCT project,identifier FROM latest_data WHERE identifier IN %s AND project = ?) a ORDER BY identifier", strings.Join(subqueries, ","), queryInString)
-	queryParams = append(queryParams, identifiers...)
 	queryParams = append(queryParams, project)
+	query := fmt.Sprintf("SELECT project,identifier,%s FROM (SELECT DISTINCT project,identifier FROM latest_data WHERE identifier IN %s AND project = $%d) a ORDER BY identifier", strings.Join(subqueries, ","), queryInString, len(queryParams))
 
-	rows, err := db.Query(query, stringSliceToInterfaceSlice(queryParams)...)
+	rows, err := db.Query(context.Background(), query, stringSliceToInterfaceSlice(queryParams)...)
 	if err != nil {
 		log.Printf("Could not query for project data: '%v'\n", err)
 		return "", err
@@ -488,7 +487,7 @@ func projectDataToTSV(db *sql.DB, project string, identifiers []string, params [
 
 func downloadAllTSVData(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	p := mux.Vars(r)["project"]
 	u := validateUser(db, r)
@@ -529,6 +528,7 @@ func downloadSheetTSVData(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	project := mux.Vars(r)["project"]
 	sheet, _ := strconv.Atoi(mux.Vars(r)["sheet"])
+	defer db.Close(context.Background())
 
 	u := validateUser(db, r)
 	if u == nil || !u.canAccessProject(db, project) || !sheetBelongsToProject(db, project, sheet) {

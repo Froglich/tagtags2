@@ -1,7 +1,7 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5"
 )
 
 type sheetDetails struct {
@@ -22,7 +23,7 @@ type sheetDetails struct {
 
 func getSheets(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := validateUser(db, r)
 	if u == nil {
@@ -35,10 +36,10 @@ func getSheets(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
-func getSheetDetailsForProject(db *sql.DB, project string) ([]sheetDetails, error) {
+func getSheetDetailsForProject(db *pgx.Conn, project string) ([]sheetDetails, error) {
 	sheets := make([]sheetDetails, 0)
 
-	rows, err := db.Query("SELECT id, version, name FROM sheets WHERE project = ?", project)
+	rows, err := db.Query(context.Background(), "SELECT id, version, name FROM sheets WHERE project = $1", project)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +60,7 @@ func getSheetDetailsForProject(db *sql.DB, project string) ([]sheetDetails, erro
 func getSheet(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := validateUser(db, r)
 	if u == nil || !u.canAccessSheet(db, id) {
@@ -67,7 +68,7 @@ func getSheet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := db.QueryRow("SELECT project, name, version, sheet FROM sheets WHERE id = ?", id)
+	row := db.QueryRow(context.Background(), "SELECT project, name, version, sheet FROM sheets WHERE id = $1", id)
 	var project string
 	var name string
 	var version int
@@ -88,7 +89,7 @@ func getSheet(w http.ResponseWriter, r *http.Request) {
 func getSheetDetails(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := validateUser(db, r)
 	if u == nil || !u.canAccessSheet(db, id) {
@@ -96,7 +97,7 @@ func getSheetDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := db.QueryRow("SELECT name, project, version FROM sheets WHERE id = ?", id)
+	row := db.QueryRow(context.Background(), "SELECT name, project, version FROM sheets WHERE id = $1", id)
 	var name string
 	var project string
 	var version int
@@ -152,14 +153,14 @@ func getSheetFromForm(r *http.Request) (string, string, error) {
 	return name, sheet, nil
 }
 
-func insertSheetInDB(db *sql.DB, project string, sheet string, name string) (int, error) {
-	_, err := db.Exec("INSERT INTO sheets(project, version, name, sheet) VALUES(?, 1, ?, ?)", project, name, sheet)
+func insertSheetInDB(db *pgx.Conn, project string, sheet string, name string) (int, error) {
+	_, err := db.Exec(context.Background(), "INSERT INTO sheets(project, version, name, sheet) VALUES($1, 1, $2, $3)", project, name, sheet)
 	if err != nil {
 		log.Printf("while inserting sheet in db: '%v'\n", err)
 		return 0, err
 	}
 
-	row := db.QueryRow("SELECT id FROM sheets WHERE project = ? AND name = ?", project, name)
+	row := db.QueryRow(context.Background(), "SELECT id FROM sheets WHERE project = $1 AND name = $2", project, name)
 	var id int
 	if err := row.Scan(&id); err != nil {
 		log.Printf("while getting sheet id from db: '%v'\n", err)
@@ -169,8 +170,8 @@ func insertSheetInDB(db *sql.DB, project string, sheet string, name string) (int
 	return id, nil
 }
 
-func updateSheetInDB(db *sql.DB, id int, project string, sheet string) (int, error) {
-	row := db.QueryRow("SELECT version FROM sheets WHERE id = ? AND project = ?", id, project)
+func updateSheetInDB(db *pgx.Conn, id int, project string, sheet string) (int, error) {
+	row := db.QueryRow(context.Background(), "SELECT version FROM sheets WHERE id = $1 AND project = $2", id, project)
 	var version int
 	if err := row.Scan(&version); err != nil {
 		log.Println(err)
@@ -178,7 +179,7 @@ func updateSheetInDB(db *sql.DB, id int, project string, sheet string) (int, err
 	}
 	version++
 
-	_, err := db.Exec("UPDATE sheets SET version = ?, sheet = ? WHERE id = ?", version, sheet, id)
+	_, err := db.Exec(context.Background(), "UPDATE sheets SET version = $1, sheet = $2 WHERE id = $3", version, sheet, id)
 	if err != nil {
 		log.Println(err)
 		return 0, err
@@ -190,7 +191,7 @@ func updateSheetInDB(db *sql.DB, id int, project string, sheet string) (int, err
 func uploadSheet(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	proj := mux.Vars(r)["project"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -218,7 +219,7 @@ func uploadSheet(w http.ResponseWriter, r *http.Request) {
 func saveSheet(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	proj := mux.Vars(r)["project"]
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -259,7 +260,7 @@ func updateSheet(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	proj := mux.Vars(r)["project"]
 	id, _ := strconv.Atoi(mux.Vars(r)["sheet"])
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -289,7 +290,7 @@ func deleteSheet(w http.ResponseWriter, r *http.Request) {
 	db := getDBConnection()
 	proj := mux.Vars(r)["project"]
 	id, _ := strconv.Atoi(mux.Vars(r)["sheet"])
-	defer db.Close()
+	defer db.Close(context.Background())
 
 	u := requireValidUser(db, w, r)
 	if u == nil {
@@ -299,7 +300,7 @@ func deleteSheet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := db.Exec("DELETE FROM sheets WHERE project = ? AND id = ?", proj, id)
+	_, err := db.Exec(context.Background(), "DELETE FROM sheets WHERE project = $1 AND id = $2", proj, id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

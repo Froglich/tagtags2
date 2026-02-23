@@ -1,9 +1,10 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"encoding/json"
-	"fmt"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type tagTagsField struct {
@@ -49,8 +50,8 @@ func sheetFromJSON(sheet []byte) (*tagTagsSheet, error) {
 	return &ns, nil
 }
 
-func getSheetFromDB(db *sql.DB, id int) (*tagTagsSheet, error) {
-	row := db.QueryRow("SELECT sheet FROM sheets WHERE id = ?", id)
+func getSheetFromDB(db *pgx.Conn, id int) (*tagTagsSheet, error) {
+	row := db.QueryRow(context.Background(), "SELECT sheet FROM sheets WHERE id = $1", id)
 	var sheet string
 	if err := row.Scan(&sheet); err != nil {
 		return nil, err
@@ -59,14 +60,12 @@ func getSheetFromDB(db *sql.DB, id int) (*tagTagsSheet, error) {
 	return sheetFromJSON([]byte(sheet))
 }
 
-func sheetBelongsToProject(db *sql.DB, project string, sheet int) bool {
-	row := db.QueryRow("SELECT COUNT(*) FROM sheets WHERE id = ? AND project = ?", sheet, project)
+func sheetBelongsToProject(db *pgx.Conn, project string, sheet int) bool {
+	row := db.QueryRow(context.Background(), "SELECT COUNT(*) FROM sheets WHERE id = $1 AND project = $2", sheet, project)
 	var count int
 	if err := row.Scan(&count); err != nil {
 		return false
 	}
-
-	fmt.Println(sheet, project, count)
 
 	return count == 1
 }

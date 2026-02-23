@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:tagtags2/base/constants.dart';
 import 'package:tagtags2/views/start.dart';
 import 'package:flutter/services.dart' show rootBundle;
+//import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
+  //sqfliteFfiInit();
+  //databaseFactory = databaseFactoryFfi;
+
   LicenseRegistry.addLicense(() async* {
     yield LicenseEntryWithLineBreaks(
         ['Fira font'], await rootBundle.loadString('assets/fira/LICENSE'));

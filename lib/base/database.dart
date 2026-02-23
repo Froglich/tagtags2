@@ -73,6 +73,8 @@ class TagTagsDatabase {
 
   Future<TagTagsDatabase> init() async {
     var path = join(await getDatabasesPath(), 'tagtags.db');
+    print(path);
+    //print(File.fromUri(path as Uri).existsSync());
     this._database = await openDatabase(path,
         version: 3,
         onConfigure: _onConfigure,
