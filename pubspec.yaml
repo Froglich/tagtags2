@@ -15,10 +15,10 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 2.0.0+20
+version: 2.0.1+22
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -26,16 +26,16 @@ dependencies:
   sqlite3:
   #sqlite3_flutter_libs:
   sqflite: ^2.0.2
-  permission_handler: ^9.2.0
+  permission_handler: ^12.0.1
   waterfall_flow: any
-  http: ^0.13.1
-  geolocator: ^7.0.3
-  image_picker: ^0.7.4
+  http: ^1.6.0
+  geolocator: ^14.0.2
+  image_picker: ^1.2.1
   path_provider: ^2.0.9
-  connectivity_plus: ^1.0.5
-  qr_mobile_vision: ^3.0.1
-  native_device_orientation: ^1.1.4
-  share_plus: ^6.0.1
+  connectivity_plus: ^7.0.0
+  qr_mobile_vision: ^6.0.2
+  native_device_orientation: ^2.1.0
+  share_plus: ^12.0.1
   cross_file: ^0.3.3+2
 
   # The following adds the Cupertino Icons font to your application.
@@ -43,9 +43,17 @@ dependencies:
   cupertino_icons: ^1.0.2
 
 dev_dependencies:
+  flutter_launcher_icons: "^0.13.1" # Standard stable version
   flutter_test:
     sdk: flutter
   test:
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: false
+  image_path: "assets/images/tagtags2.5.png"
+  adaptive_icon_background: "assets/images/tagtags2.5_bg.png"
+  adaptive_icon_foreground: "assets/images/tagtags2.5.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

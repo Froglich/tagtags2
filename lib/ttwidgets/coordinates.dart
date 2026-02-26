@@ -55,9 +55,25 @@ class _TagTagsCoordinatesWidgetState extends State<TagTagsCoordinatesWidget> {
   }
 
   void startLocationUpdater() {
-    ss = Geolocator.getPositionStream(intervalDuration: Duration(seconds: 1))
-        .listen((pos) {
+    ss = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        // timeLimit is the closest equivalent to the old intervalDuration
+        timeLimit: Duration(seconds: 20),
+      ),
+    ).listen((pos) {
       update(pos.latitude, pos.longitude, pos.altitude);
+    }, onError: (e) {
+      if (e is TimeoutException) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('GPS signal timed out. Error searching for GPS signal...'),
+            backgroundColor: TagTagsColors.primaryColor, // Use your red from constants.dart
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     });
 
     setState(() {

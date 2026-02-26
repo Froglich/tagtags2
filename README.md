@@ -8,7 +8,7 @@ In this iteration of the app, all data is stored as key-value pairs in a table i
 
 1. Identifier construction - This first view presents the user with a few input fields which together should form a unique identifier after executing a constructor function specified in the document.
 2. Data collection - This view is where data is actually collected, these values can then be grouped together using the unique identifier passed from the first page.
-	
+
 The constructed identifier, static project id and parameter name together form a unique identifier in the database. Each field on the data collection page corresponds to one row in the database and each field independently tell the application to update their data when changed. Data is stored as text following type specific formatting in the database.
 
 ## Data and field types

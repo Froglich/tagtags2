@@ -38,11 +38,21 @@ class _TagTagsState extends State<TagTags> {
 
     return MaterialApp(
       title: 'TagTags',
-      theme: theme.copyWith(
-        colorScheme: theme.colorScheme.copyWith(
-            primary: TagTagsColors.primaryColor,
-            secondary: TagTagsColors.secondaryColor,
-        )
+      theme: ThemeData(
+        useMaterial3: true,
+        fontFamily: 'Fira',
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: TagTagsColors.primaryColor,
+          primary: TagTagsColors.primaryColor,
+          secondary: TagTagsColors.secondaryColor,
+          // FORCING WHITE BACKGROUNDS:
+          surface: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: AppBarTheme(
+          backgroundColor: TagTagsColors.primaryColor,
+          foregroundColor: Colors.white, // Text/Icon color
+        ),
       ),
       home: TagTagsStartView(),
     );

@@ -87,9 +87,9 @@ class _TagTagsCameraWidgetState extends State<TagTagsCameraWidget> {
   }
 
   void pickImage(BuildContext context) async {
-    PickedFile? f;
+    XFile? f;
     try {
-      f = await picker.getImage(source: ImageSource.camera);
+      f = await picker.pickImage(source: ImageSource.camera);
     } on PlatformException catch (e) {
       noticeDialog(context, "Platform error", "Probably missing permission to open camera. Error: $e",
           TagTagsIcons.largeErrorIcon);

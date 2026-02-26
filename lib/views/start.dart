@@ -187,22 +187,29 @@ class _TagTagsStartViewState extends State<TagTagsStartView> {
                 applicationVersion: '2.0')),
         IconButton(icon: Icon(Icons.settings), onPressed: _openSettings)
       ]),
-      bottomNavigationBar: SizedBox(
-          height: 64,
-          child: Container(
-              padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
-              decoration: BoxDecoration(color: Colors.white, boxShadow: [
-                BoxShadow(
-                    spreadRadius: 2,
-                    blurRadius: 3,
-                    color: Colors.grey,
-                )
-              ]),
-              child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+      bottomNavigationBar: Container(
+        // This detects the exact height of the system navigation bar
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                spreadRadius: 2,
+                blurRadius: 3,
+                color: Colors.grey,
+              )
+            ]
+        ),
+        child: SizedBox(
+            height: 64, // Your original intended height
+            child: Container(
+                padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                   _syncing ? TagTagsSyncWidget(_db!, _syncComplete) : Container(),
                   Image(image: AssetImage('assets/images/slulogo.png')),
                   Image(image: AssetImage('assets/images/siteslogo.png'))
-              ]))),
+                ]))),
+      ),
       body: _buildBody()
     );
   }

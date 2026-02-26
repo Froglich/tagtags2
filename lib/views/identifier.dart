@@ -180,7 +180,8 @@ class _TagTagsProtInitViewState extends State<TagTagsProtInitView> {
                   ]
                 ),
                 bottomNavigationBar: Container(
-                    padding: EdgeInsets.all(5),
+                  // Pushes the button up precisely above the system navigation
+                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
                     decoration: BoxDecoration(color: _backgroundColor(), boxShadow: [
                       BoxShadow(
                         spreadRadius: 2,
@@ -189,21 +190,23 @@ class _TagTagsProtInitViewState extends State<TagTagsProtInitView> {
                       )
                     ]),
                     child: TextButton(
+                      // Added some vertical padding to ensure the button is easy to hit
+                        style: TextButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 12)),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(_identifier != null
-                              ? 'Open collection '
-                              : 'Please specify a value in all fields above',
-                              style: TextStyle(color: _textColor())),
-                            Visibility(
-                              visible: _identifier != null,
-                              child: Text(
-                                  _identifier != null ? _identifier : '',
-                                  style: TextStyle(color: _textColor(), fontWeight: FontWeight.bold))
-                            ),
-                            SizedBox(width: 10),
-                            Icon(Icons.arrow_forward, color: _textColor())]
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(_identifier != null
+                                  ? 'Open collection '
+                                  : 'Please specify a value in all fields above',
+                                  style: TextStyle(color: _textColor())),
+                              Visibility(
+                                  visible: _identifier != null,
+                                  child: Text(
+                                      _identifier != null ? _identifier : '',
+                                      style: TextStyle(color: _textColor(), fontWeight: FontWeight.bold))
+                              ),
+                              SizedBox(width: 10),
+                              Icon(Icons.arrow_forward, color: _textColor())]
                         ),
                         onPressed:
                         _identifier != null ? _openCollection : null)),
