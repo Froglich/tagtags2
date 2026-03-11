@@ -110,7 +110,12 @@ class _TagTagsTimeWidgetState extends State<TagTagsTimeWidget> {
                               context: context,
                               initialTime: TimeOfDay.now());
 
-                          update(date.toString().substring(10,15));
+                          if(date != null) {
+                            final String hour = date.hour.toString().padLeft(2, '0');
+                            final String minute = date.minute.toString().padLeft(2, '0');
+
+                            update("$hour:$minute");
+                          }
                         }
                     )),
                     if(_highlighted) TagTagsIcons.warningIcon

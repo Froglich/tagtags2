@@ -107,12 +107,22 @@ class _TagTagsDateWidgetState extends State<TagTagsDateWidget> {
                               readOnly: true,
                               controller: dateController,
                               onTap: () async {
-                                var date = await showDatePicker(
+                                DateTime? pickedDate = await showDatePicker(
                                     context: context,
                                     initialDate: DateTime.now(),
-                                    firstDate: DateTime(1950), lastDate: DateTime(2050));
+                                    firstDate: DateTime(1950),
+                                    lastDate: DateTime(2050)
+                                );
 
-                                update(date.toString().substring(0,10));
+                                if (pickedDate != null) {
+                                  final String y = pickedDate.year.toString();
+                                  final String m = pickedDate.month.toString().padLeft(2, '0');
+                                  final String d = pickedDate.day.toString().padLeft(2, '0');
+                                  final String formatted = "$y-$m-$d";
+
+                                  update(formatted);
+                                  dateController.text = formatted;
+                                }
                               }
                           )),
                           if(_highlighted) TagTagsIcons.warningIcon
