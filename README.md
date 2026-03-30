@@ -1,3 +1,7 @@
+# This repository is no longer active
+
+Development of TagTags 2 continues on Codeberg, please look for updates there. https://codeberg.org/Froglich/tagtags2
+
 # Introduction
 
 This version of TagTags is a complete rewrite and introduces substatial changes which makes it fundamentally incompatible with the original app. The goal has been to increase reliability and performance by revising the data structure and by leveraging powerful existing technologies for data storage and transfer. The mobile app is written in Dart and uses the Flutter framework.
